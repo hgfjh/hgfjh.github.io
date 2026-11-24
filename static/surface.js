@@ -212,6 +212,7 @@ export function mountSurface(root) {
     const fallback = root.querySelector("[data-fallback]");
     const toggle = root.querySelector("[data-toggle]");
     const slider = root.querySelector("[data-angle]");
+    const adjust = root.querySelector("[data-adjust]");
     const status = root.querySelector("[data-status]");
     if (!canvas || !fallback || !toggle || !status) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -220,6 +221,7 @@ export function mountSurface(root) {
     let draw = null, frame = null, last = null;
     let orientation = initialOrientation();
     let drag = null;
+    let loadController = null;
     let theta = 0; // standalone slider tracks a reset-relative spin phase
     const speed = 2 * Math.PI / 32; // radians per second, 32-second revolution
     const tau = 2 * Math.PI;
@@ -230,6 +232,12 @@ export function mountSurface(root) {
         last = null;
         root.dataset.animating = "false";
     }
+    function clearDrag() {
+        if (drag === null) return;
+        const id = drag.id;
+        drag = null; // lostpointercapture may dispatch another event
+        if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+    }
     function fail(message) {
         failed = true;
         ready = false;
@@ -237,7 +245,10 @@ export function mountSurface(root) {
         canvas.hidden = true;
         fallback.removeAttribute("hidden");
         toggle.disabled = true;
-        drag = null;
+        clearDrag();
+        loadController?.abort();
+        draw = null;
+        if (adjust) adjust.hidden = true;
         if (slider) slider.disabled = true;
         root.dataset.state = "fallback";
         status.textContent = message;
@@ -290,7 +301,8 @@ export function mountSurface(root) {
         try {
             const gl = canvas.getContext("webgl2", { alpha: true, antialias: true });
             if (!gl) throw new Error("WebGL 2 unavailable");
-            const response = await fetch(new URL(root.dataset.mesh, document.baseURI));
+            loadController = new AbortController();
+            const response = await fetch(new URL(root.dataset.mesh, document.baseURI), { signal: loadController.signal });
             if (!response.ok) throw new Error(`Mesh request: ${response.status}`);
             const mesh = decodeMesh(await response.arrayBuffer());
             if (failed) return;
@@ -301,13 +313,18 @@ export function mountSurface(root) {
             fallback.setAttribute("hidden", "");
             ready = true;
             toggle.disabled = false;
+            if (adjust) adjust.hidden = false;
             if (slider) slider.disabled = false;
             root.dataset.state = "ready";
             status.textContent = "Genus-two surface · generated in Rust";
             reconcile();
         } catch (error) {
-            console.warn("Genus-two surface:", error);
-            fail("Genus-two surface (static fallback).");
+            if (!failed) {
+                console.warn("Genus-two surface:", error);
+                fail("Genus-two surface (static fallback).");
+            }
+        } finally {
+            loadController = null;
         }
     }
     toggle.addEventListener("click", () => { playing = !playing; reconcile(); });
@@ -341,32 +358,42 @@ export function mountSurface(root) {
     });
     function endDrag(event) {
         if (drag?.id !== event.pointerId) return;
-        drag = null;
-        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+        clearDrag();
         reconcile();
     }
     for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) {
         canvas.addEventListener(name, endDrag);
     }
     canvas.addEventListener("dblclick", () => { if (ready) reset(); });
-    canvas.addEventListener("keydown", (event) => {
-        if (!ready || event.altKey || event.ctrlKey || event.metaKey) return;
+    function orientByKey(key) {
         const step = Math.PI / 18;
         const rotations = {
             ArrowLeft: [[0,1,0], -step], ArrowRight: [[0,1,0], step],
             ArrowUp: [[1,0,0], -step], ArrowDown: [[1,0,0], step]
         };
-        if (event.key === "Home") reset();
-        else if (Object.hasOwn(rotations, event.key)) reorient(axisAngle(...rotations[event.key]));
-        else return;
-        event.preventDefault();
+        if (!ready) return false;
+        if (key === "Home") reset();
+        else if (Object.hasOwn(rotations, key)) reorient(axisAngle(...rotations[key]));
+        else return false;
+        return true;
+    }
+    canvas.addEventListener("keydown", (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        if (orientByKey(event.key)) event.preventDefault();
     });
+    // Single-pointer alternative to dragging, including on touch screens.
+    if (adjust) {
+        for (const button of adjust.querySelectorAll("[data-orient]")) {
+            button.addEventListener("click", () => orientByKey(button.dataset.orient));
+        }
+    }
     motion.addEventListener("change", (event) => {
         // Never restart automatically when a motion preference is relaxed.
         if (event.matches) playing = false;
         reconcile();
     });
     document.addEventListener("visibilitychange", () => {
+        if (document.hidden) clearDrag();
         if (!document.hidden && visible) {
             void start();
             if (ready && !playing) render();
@@ -382,6 +409,7 @@ export function mountSurface(root) {
     if (typeof IntersectionObserver === "function") {
         new IntersectionObserver(([entry]) => {
             visible = entry.isIntersecting;
+            if (!visible) clearDrag();
             if (visible) {
                 void start();
                 if (ready && !playing && !document.hidden) render();

@@ -5,7 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Academic homepage of {{ profile.full_name }}, a mathematics PhD candidate at {{ profile.institution }}. Research: {{ profile.research_interests }}.">
   <title>{{ profile.display_name }} · Mathematics</title>
-  <link rel="stylesheet" href="./static/style.css?v=8.5">
+  <link rel="canonical" href="https://hgfjh.github.io/">
+  <meta name="author" content="{{ profile.full_name }}">
+  <meta name="theme-color" content="#191970">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hgfjh.github.io/">
+  <meta property="og:title" content="{{ profile.display_name }} · Mathematics">
+  <meta property="og:description" content="{{ profile.role }}, {{ profile.institution }}. {{ profile.research_interests }}.">
+  <meta property="og:image" content="{{ assets.share_absolute }}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="750">
+  <meta property="og:image:height" content="1000">
+  <meta property="og:image:alt" content="Portrait of {{ profile.display_name }}">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="{{ assets.icon }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ assets.style }}">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -24,9 +38,9 @@
     </div>
   </header>
 
-  <main id="main" class="page">
+  <main id="main" class="page" tabindex="-1">
     <section id="about" class="intro" aria-label="About">
-      <img class="academic-portrait" src="./static/images/portrait.webp"
+      <img class="academic-portrait" src="{{ assets.portrait }}"
         alt="Portrait of {{ profile.display_name }}" width="750" height="1000"
         fetchpriority="high">
       <div class="intro-copy">
@@ -41,7 +55,7 @@
           <a href="{{ profile.github_url }}">GitHub</a>
         </p>
         <!-- The SVG remains available if JavaScript, WebGL or the mesh is unavailable. -->
-        <figure class="hero-visual" data-genus-surface data-mesh="./static/meshes/genus2.bin?v=8.5">
+        <figure class="hero-visual" data-genus-surface data-mesh="{{ assets.mesh }}">
           <div id="surface-mount" class="surface-mount">
             <svg data-fallback role="img" aria-label="Schematic of a surface with two handles" class="surface-fallback" viewBox="0 0 400 270" xmlns="http://www.w3.org/2000/svg" focusable="false">
               <defs>
@@ -67,8 +81,20 @@
           </div>
           <figcaption>
             <span class="visually-hidden" data-status role="status">Genus-two surface (schematic)</span>
-            <span class="visually-hidden" id="surface-instructions">Drag or use arrow keys to reorient. Double-click or press Home to reset. Use the rotation button to pause or resume.</span>
-            <button class="surface-toggle" data-toggle type="button" disabled aria-label="Start rotation" title="Start rotation"><span data-rotation-icon aria-hidden="true">▶</span></button>
+            <span class="visually-hidden" id="surface-instructions">Drag or use arrow keys to reorient. Double-click or press Home to reset. Use the rotation button to pause or resume, or open the orientation controls for single-click adjustments.</span>
+            <div class="surface-controls">
+              <button class="surface-toggle" data-toggle type="button" disabled aria-label="Start rotation" title="Start rotation"><span data-rotation-icon aria-hidden="true">▶</span></button>
+              <details class="surface-adjust" data-adjust hidden>
+                <summary title="Orientation controls" aria-label="Orientation controls"><span aria-hidden="true">↔</span></summary>
+                <div class="surface-adjust-panel" role="group" aria-label="Adjust surface orientation">
+                  <button type="button" data-orient="ArrowLeft" aria-label="Rotate left">←</button>
+                  <button type="button" data-orient="ArrowRight" aria-label="Rotate right">→</button>
+                  <button type="button" data-orient="ArrowUp" aria-label="Rotate up">↑</button>
+                  <button type="button" data-orient="ArrowDown" aria-label="Rotate down">↓</button>
+                  <button type="button" data-orient="Home" aria-label="Reset orientation">↺</button>
+                </div>
+              </details>
+            </div>
           </figcaption>
         </figure>
       </div>
@@ -160,7 +186,7 @@
       <p>Contact: <a href="mailto:{{ profile.email }}">{{ profile.email }}</a></p>
     </footer>
   </main>
-  <script src="./static/videos.js" defer></script>
-  <script type="module" src="./static/surface.js?v=8.5"></script>
+  <script src="{{ assets.videos }}" defer></script>
+  <script type="module" src="{{ assets.surface }}"></script>
 </body>
 </html>

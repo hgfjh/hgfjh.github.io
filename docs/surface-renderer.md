@@ -95,3 +95,19 @@ scroll away and back, and test the OS/browser reduced-motion preference.
 Implementation assistance: ChatGPT generated the renderer, binary exporter,
 preview and tests; local Rust compilation and full browser WebGL validation
 remain the developer's responsibility.
+
+
+## Final lifecycle and accessibility polish (Commit 9)
+
+The homepage uses content-fingerprinted URLs while the local preview keeps
+stable aliases. The pause/play target is 44 CSS pixels. An optional native
+`details` disclosure supplies five individually named orientation buttons
+(four 10-degree steps and reset), so dragging is not the only pointer method.
+Keyboard interaction remains available. The renderer aborts an in-flight mesh
+request on failure and clears pointer capture if the surface or document is
+hidden, preventing an interrupted drag from indefinitely suppressing rotation.
+Context loss retains the schematic and disables the controls. It still uses
+the same GPU buffers, shaders, geometry and time-based 32-second rotation.
+
+Node tests run in CI. The tests simulate DOM and WebGL calls; they do not
+measure GPU energy use or certify browser/assistive-technology behavior.
