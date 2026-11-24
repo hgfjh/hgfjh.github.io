@@ -1,80 +1,57 @@
-# Academic Site — Commit 2
+# Academic Site — Commit 3
 
-A minimal Rust + Askama static-site exporter with automated publishing to GitHub Pages.
-The GitHub Pages site serves generated HTML/CSS; it does **not** run a Rust server.
+A small Rust + Askama static-site exporter for an academic homepage. The deployed
+site contains HTML, CSS, and a public CV PDF; GitHub Pages does **not** run Rust.
 
-## Prerequisites
+## What's new in Commit 3
 
-- Git and a working Rust toolchain (with Cargo, rustfmt, and Clippy)
-- A GitHub account named `hgfjh`
-- A **public** repository named exactly `hgfjh.github.io`, with default branch `main`
+- `src/content.rs` provides the academic profile and education entries.
+- `templates/index.html` renders the biography, education, and contact links.
+- `assets/cv-public.pdf` is a public copy of the four-page CV. The residential
+  address and telephone number have been **redacted from the PDF content**.
+- `src/main.rs` copies the sanitized PDF to `dist/cv.pdf` during static export.
+- The GitHub Actions workflow verifies that the public CV was exported.
 
-## Run locally (PowerShell)
+The homepage keeps **Olu Olorode** as its display name, as in the existing
+GitHub repository, while the CV retains the full professional name.
 
-```powershell
-cargo run
-python -m http.server 8000 --directory dist
-```
-
-Open http://localhost:8000/ . For Python installations using the launcher, replace `python` with `py`.
-This produces `dist/index.html` and `dist/static/style.css`.
-
-## Check before publishing
+## Local build (PowerShell)
 
 ```powershell
 cargo fmt --all -- --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo test --locked
 cargo run --release --locked
+python -m http.server 8000 --directory dist
 ```
 
-**Important:** `--locked` expects a committed `Cargo.lock`. If it is missing, run
-`cargo generate-lockfile` once, then `git add Cargo.lock` and commit it. Cargo
-creates this lockfile when you first run `cargo run`, too.
+Visit <http://localhost:8000/> and check the **Download CV** link. If `python`
+isn't available, try `py -m http.server 8000 --directory dist`.
 
-## Publish the site
+`--locked` uses your existing committed `Cargo.lock`. It is not intentionally
+replaced by this commit, since no dependency versions have changed.
 
-1. On GitHub, create a *public* repository named `hgfjh.github.io` owned by `hgfjh`.
-   If using an existing local project, create an **empty** GitHub repository
-   (do not pre-populate with a separate README or `.gitignore`).
-2. Navigate to **Settings → Pages → Build and deployment → Source** and choose
-   **GitHub Actions**.
-3. Ensure that `main` is your default branch and `Cargo.lock` is tracked.
-4. Add `.github/workflows/deploy.yml` to your existing project, then run:
+## Apply on top of Commit 2
 
-   ```powershell
-   git add .github/workflows/deploy.yml README.md Cargo.lock
-   git commit -m "ci: deploy generated Rust site to GitHub Pages"
-   git remote add origin https://github.com/hgfjh/hgfjh.github.io.git
-   git push -u origin main
-   ```
+Replace the corresponding files in your existing repository with those from
+this archive; add `src/content.rs` and `assets/cv-public.pdf`. Keep your own
+`Cargo.lock` and `.git` history.
 
-   If `origin` already exists, **skip** `git remote add origin`.
-   If the repository already has commits or a remote, review the existing
-   branch/history rather than force-pushing.
+```powershell
+git status
+git add src/main.rs src/content.rs templates/index.html static/style.css assets/cv-public.pdf .github/workflows/deploy.yml .gitignore README.md
+git commit -m "feat: add academic profile and public CV"
+git push origin main
+```
 
-5. Open the repository's **Actions** tab. Select **Build and deploy academic site**
-   and inspect the latest run. After `build` and `deploy` succeed, visit
-   https://hgfjh.github.io/ .
+The existing `main` deployment workflow will build and publish `dist/` on push.
 
-### What the workflow does
+## Privacy and future editing
 
-- Runs on every push to `main`, or when started manually in the Actions tab.
-- Checks out the source and installs the stable Rust toolchain.
-- Runs formatting checks, Clippy, and Rust tests with the lockfile.
-- Generates the website with `cargo run --release --locked`.
-- Checks that the HTML and CSS exist.
-- Uploads **only** `dist/` as a GitHub Pages deployment artifact.
-- Deploys the artifact with the `github-pages` environment and minimum deployment permissions.
+**Do not add the original `cv.pdf` to this public repository.** If you later
+update your CV, prepare and inspect a fresh public version before replacing
+`assets/cv-public.pdf`. A white rectangle over sensitive text is not secure
+redaction; the underlying text must be removed.
 
-The `dist/` and `target/` directories are intentionally excluded from Git.
-
-## Troubleshooting
-
-- **`Cargo.lock needs to be updated`**: run `cargo generate-lockfile` locally and commit the lockfile.
-- **`Resource not accessible by integration` or Pages deployment denied**:
-  confirm **Settings → Pages → Source = GitHub Actions** and review Actions/Pages permissions and environment restrictions.
-- **404**: verify the repository is named exactly `hgfjh.github.io`, the Actions
-  run completed successfully, and the browser URL is `https://hgfjh.github.io/`.
-- **CSS missing**: verify `dist/static/style.css` exists in the generated artifact.
-- **Action not running**: confirm the workflow file is committed on `main`.
+Publication entries and YouTube video metadata come in Commit 4; the homepage
+uses only the biographical and education information from the supplied CV.

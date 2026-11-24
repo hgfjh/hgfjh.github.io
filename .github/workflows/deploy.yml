@@ -42,6 +42,7 @@ jobs:
         run: |
           test -s dist/index.html
           test -s dist/static/style.css
+          test -s dist/cv.pdf
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

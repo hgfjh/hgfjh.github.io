@@ -3,16 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Academic homepage of {{ name }}.">
-  <title>{{ name }} · Mathematics</title>
+  <meta name="description" content="Academic homepage of {{ profile.full_name }}, a mathematics PhD candidate at {{ profile.institution }}.">
+  <title>{{ profile.display_name }} · Mathematics</title>
   <link rel="stylesheet" href="./static/style.css">
 </head>
 <body>
-  <main class="page">
-    <p class="eyebrow">Mathematics · Cornell University</p>
-    <h1>{{ name }}</h1>
-    <p class="lead">{{ research }}</p>
-    <p class="note">Academic website under construction.</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="site-name" href="./">{{ profile.display_name }}</a>
+    <nav aria-label="Primary navigation">
+      <a href="#about">About</a>
+      <a href="#education">Education</a>
+      <a href="./cv.pdf">CV (PDF)</a>
+    </nav>
+  </header>
+
+  <main id="main" class="page">
+    <section class="hero" aria-labelledby="home-heading">
+      <p class="eyebrow">{{ profile.role }} · {{ profile.institution }}</p>
+      <h1 id="home-heading">{{ profile.display_name }}</h1>
+      <p class="lead">{{ profile.research_interests }}</p>
+      <div class="hero-links">
+        <a class="button-link" href="./cv.pdf" download="Oluwadamilola-Olorode-CV.pdf">Download CV</a>
+        <a href="mailto:{{ profile.email }}">Email</a>
+        <a href="{{ profile.github_url }}">GitHub</a>
+      </div>
+    </section>
+
+    <section id="about" class="content-section" aria-labelledby="about-heading">
+      <h2 id="about-heading">About</h2>
+
+      <p>
+        I am a mathematics PhD candidate at {{ profile.institution }},
+        advised by
+        <a href="{{ profile.advisor_url }}">{{ profile.advisor_name }}</a>.
+        {{ profile.biography }}
+      </p>
+    </section>
+
+    <section id="education" class="content-section" aria-labelledby="education-heading">
+      <h2 id="education-heading">Education</h2>
+      <ol class="education-list">
+      {% for item in profile.education %}
+        <li>
+          <div class="education-header">
+            <h3>{{ item.institution }}</h3>
+            <span class="dates">{{ item.dates }}</span>
+          </div>
+          <p class="degree">{{ item.degree }}</p>
+          <p class="details">{{ item.details }}</p>
+        </li>
+      {% endfor %}
+      </ol>
+    </section>
+
+    <footer class="site-footer">
+      <p>Contact: <a href="mailto:{{ profile.email }}">{{ profile.email }}</a></p>
+    </footer>
   </main>
 </body>
 </html>
