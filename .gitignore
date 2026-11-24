@@ -3,3 +3,5 @@
 # Avoid accidentally publishing a private source CV from the repo root.
 /cv.pdf
 /cv-original.pdf
+
+/.serena/
