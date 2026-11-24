@@ -26,13 +26,19 @@ impl HomePage {
 
 /// Render the website into a directory suitable for GitHub Pages.
 fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
-    fs::create_dir_all(output.join("static"))?;
+    fs::create_dir_all(output.join("static/images"))?;
 
     let page = HomePage::new();
 
     fs::write(output.join("index.html"), page.render()?)?;
     fs::copy("static/style.css", output.join("static/style.css"))?;
     fs::copy("static/videos.js", output.join("static/videos.js"))?;
+
+    // Keep the optimized portrait as a local static asset, just like the CSS.
+    fs::copy(
+        "static/images/portrait.webp",
+        output.join("static/images/portrait.webp"),
+    )?;
 
     // The PDF in assets/ is a *public* copy: private contact details were
     // actually redacted from the source PDF, not just visually covered.
@@ -67,6 +73,10 @@ mod tests {
         assert!(html.contains("Jason Manning"));
         assert!(html.contains("https://sites.google.com/cornell.edu/jasonmanning/home"));
         assert!(html.contains("./cv.pdf"));
+        assert!(html.contains("./static/images/portrait.webp"));
+        assert!(html.contains("alt=\"Portrait of Olu Olorode\""));
+        assert!(html.contains("href=\"#software\""));
+        assert!(html.contains("id=\"surface-mount\""));
         assert!(html.contains("mailto:oio3@cornell.edu"));
         assert!(html.contains("https://github.com/hgfjh"));
         assert!(!html.contains("Village Circle"));

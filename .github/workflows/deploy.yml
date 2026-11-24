@@ -43,6 +43,8 @@ jobs:
           test -s dist/index.html
           test -s dist/static/style.css
           test -s dist/static/videos.js
+          test -s dist/static/images/portrait.webp
+          cmp static/images/portrait.webp dist/static/images/portrait.webp
           test -s dist/cv.pdf
 
       - name: Configure GitHub Pages

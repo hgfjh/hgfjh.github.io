@@ -1,77 +1,81 @@
+/* Midnight-blue academic homepage. No external fonts or layout scripts. */
 :root {
   color-scheme: light;
+  --midnight: #191970;
+  --paper: #ffffff;
+  --ink: #242833;
+  --muted: #4f5868;
+  --link: #233e78;
+  --line: #d6dce6;
+  --measure: 53rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #172334;
-  background: #f8f9fb;
+  color: var(--ink);
+  background: var(--paper);
 }
-
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+[hidden] { display: none !important; }
 body { margin: 0; line-height: 1.6; }
-a { color: #275379; text-underline-offset: 0.18em; }
-a:focus-visible { outline: 3px solid #275379; outline-offset: 4px; }
-
-.skip-link { position: absolute; top: -5rem; left: 1rem; z-index: 1; background: white; padding: 0.5rem; }
+a { color: var(--link); text-underline-offset: .16em; }
+a:hover { color: var(--midnight); }
+:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.skip-link { position: absolute; top: -8rem; left: 1rem; z-index: 10; background: white; padding: .5rem; }
 .skip-link:focus { top: 1rem; }
-.site-header {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 1.35rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  border-bottom: 1px solid #dce4ed;
-}
-.site-name { font-weight: 700; text-decoration: none; color: #172334; }
-.site-header nav { display: flex; flex-wrap: wrap; gap: 1.2rem; }
-.site-header nav a { text-decoration: none; font-size: 0.92rem; }
-.site-header nav a:hover { text-decoration: underline; }
 
-.page { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 4rem; }
-.hero { padding: clamp(3rem, 10vw, 6rem) 0 2.5rem; }
-.eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #516883; }
-h1 { font-size: clamp(2.4rem, 7vw, 4.25rem); letter-spacing: -0.035em; line-height: 1.08; margin: 1.25rem 0; }
-.lead { font-size: clamp(1.05rem, 2vw, 1.35rem); line-height: 1.65; max-width: 43rem; }
-.hero-links { margin-top: 1.6rem; display: flex; align-items: center; gap: 0.9rem 1.4rem; flex-wrap: wrap; }
-.button-link { background: #204e76; color: white; padding: 0.65rem 1rem; text-decoration: none; border-radius: 0.3rem; }
-.button-link:hover { background: #133958; }
-.content-section { padding: 1.9rem 0; border-top: 1px solid #dce4ed; }
-h2 { font-size: 1.15rem; margin: 0 0 1rem; }
-.content-section p { max-width: 45rem; }
-.education-list { list-style: none; margin: 0; padding: 0; }
-.education-list li + li { margin-top: 1.5rem; }
-.education-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.25rem 1rem; }
-h3 { font-size: 1rem; margin: 0; }
-.dates, .details { color: #566579; }
-.degree, .details { margin: 0.15rem 0; }
-.site-footer { border-top: 1px solid #dce4ed; margin-top: 1.3rem; padding-top: 1.4rem; font-size: 0.88rem; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* The only full-width colored region is the academic masthead. */
+.site-header { background: var(--midnight); color: white; }
+.header-inner, .page { max-width: calc(var(--measure) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter); }
+.header-inner { padding-block: 1.65rem 1.15rem; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw, 2.65rem); font-weight: 400; line-height: 1.15; margin: 0; }
+.affiliation { margin: .3rem 0 1rem; color: #e6e9f6; font-size: .96rem; }
+.site-header nav { display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; align-items: baseline; }
+.site-header nav a { color: white; font-size: .91rem; padding-block: .2rem; }
+.site-header nav a:hover { color: #dbe3ff; }
+.nav-demo { font-weight: 600; }
+.page { padding-bottom: 2rem; }
+.intro { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); align-items: start; gap: clamp(1.25rem, 4vw, 2.5rem); padding-block: 1.7rem; }
+.academic-portrait { display: block; width: 100%; max-width: 16rem; height: auto; }
+.intro-copy { min-width: 0; padding-top: .25rem; }
+.intro p { margin: 0; }
+.contact-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .65rem; padding-top: .8rem; font-size: .94rem; overflow-wrap: anywhere; }
+.hero-visual { width: min(100%, 10rem); margin: .55rem 0 0 auto; }
+.surface-mount { position: relative; aspect-ratio: 400 / 270; overflow: hidden; }
+.surface-fallback { display: block; width: 100%; height: 100%; }
+.hero-visual figcaption { font-size: .75rem; color: var(--muted); text-align: center; }
 
-/* Research and talks; the broader visual redesign is reserved for Commit 5. */
-.research-list, .talk-list { list-style: none; margin: 0; padding: 0; }
-.research-list > li + li, .talk-list > li + li { margin-top: 1.5rem; }
-.research-list > li + li { border-top: 1px solid #dce4ed; padding-top: 1.5rem; }
-.paper-status { margin: 0.6rem 0; }
-.paper-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; font-size: 0.92rem; }
-.paper-abstract { margin: 0.8rem 0; }
-.paper-abstract summary { cursor: pointer; color: #275379; }
-.paper-abstract summary:focus-visible, .video-load:focus-visible { outline: 3px solid #275379; outline-offset: 4px; }
-.paper-video { max-width: 38rem; margin-top: 1rem; }
-.paper-video > a { font-size: 0.88rem; }
-.video-load {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  font: inherit;
-  font-weight: 600;
-  color: #204e76;
-  background: #e9eff5;
-  border: 1px solid #b9cbdc;
-  border-radius: 0.4rem;
-  cursor: pointer;
-  margin-bottom: 0.5rem;
+/* A single reading column, with conventional headings and citation lists. */
+.content-section { padding-block: 1.25rem 1.45rem; border-top: 1px solid var(--line); scroll-margin-top: 1rem; }
+h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.55rem; color: var(--midnight); font-weight: 400; line-height: 1.25; margin: 0 0 .85rem; }
+h3 { font-size: 1rem; line-height: 1.45; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.research-list { margin: 0; padding-left: 1.5rem; }
+.research-list > li { padding-left: .2rem; }
+.research-list > li::marker { color: var(--muted); }
+.research-list > li + li { margin-top: 1.1rem; }
+.research-list h3 { font-weight: 600; }
+.talk-list, .education-list { list-style: none; margin: 0; padding: 0; }
+.talk-list > li + li, .education-list > li + li { margin-top: .8rem; }
+.education-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .1rem 1rem; }
+.dates, .details, .paper-status, .demo-status { color: var(--muted); font-size: .91rem; }
+.dates { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.degree, .details, .paper-status { margin: .15rem 0; }
+.paper-links { display: flex; flex-wrap: wrap; gap: .25rem 1rem; font-size: .92rem; }
+.paper-abstract { margin: .5rem 0; }
+.paper-abstract summary { cursor: pointer; color: var(--link); }
+.paper-abstract p { max-width: 72ch; }
+.paper-video { max-width: 36rem; margin-top: .8rem; }
+.paper-video > a { font-size: .9rem; }
+.video-load { font: inherit; font-size: .92rem; color: var(--link); background: white; border: 1px solid var(--link); padding: .35rem .65rem; cursor: pointer; margin: 0 .6rem .4rem 0; }
+.video-load:hover { background: #eef2f8; }
+.video-player { aspect-ratio: 16 / 9; margin-bottom: .5rem; }
+.video-player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.software-panel p { margin: .35rem 0; }
+.site-footer { border-top: 1px solid var(--line); padding-top: .8rem; font-size: .9rem; color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 35rem) {
+  .header-inner { padding-block: 1.3rem .95rem; }
+  .site-header nav { gap: .25rem .9rem; }
+  .intro { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding-block: 1.25rem; }
+  .academic-portrait { width: min(100%, 13rem); justify-self: center; }
+  .intro-copy { padding-top: 0; }
+  .hero-visual { width: min(100%, 9rem); margin: .65rem auto 0; }
+  .content-section { padding-block: 1.1rem; }
 }
-.video-load:hover { background: #dce7f1; }
-.video-player { aspect-ratio: 16 / 9; margin-bottom: 0.5rem; }
-.video-player iframe { width: 100%; height: 100%; border: 0; }
