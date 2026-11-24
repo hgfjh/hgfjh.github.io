@@ -38,11 +38,15 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw,
 .intro-copy { min-width: 0; padding-top: .25rem; }
 .intro p { margin: 0; }
 .contact-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .65rem; padding-top: .8rem; font-size: .94rem; overflow-wrap: anywhere; }
-.hero-visual { width: min(100%, 13rem); margin: .25rem auto 0; }
+.hero-visual { width: min(100%, 18rem); margin: .25rem auto 0; }
 .surface-mount { position: relative; aspect-ratio: 1 / 1; overflow: hidden; }
 .surface-mount canvas, .surface-fallback { display: block; width: 100%; height: 100%; position: absolute; inset: 0; }
 .hero-visual figcaption { font-size: .8rem; color: var(--muted); text-align: center; }
-.surface-toggle { display: block; margin: .15rem auto 0; padding: .35rem .65rem; min-height: 32px; font: inherit; color: var(--link); background: var(--paper); border: 1px solid var(--line); border-radius: .2rem; cursor: pointer; }
+.surface-toggle { display: grid; place-items: center; margin: 0 auto; width: 36px; height: 36px; padding: 0; font: inherit; color: var(--link); background: transparent; border: 1px solid transparent; border-radius: .2rem; cursor: pointer; }
+.surface-mount canvas { cursor: grab; touch-action: none; }
+.surface-mount canvas:active { cursor: grabbing; }
+.surface-mount canvas:focus-visible { outline-offset: -3px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .surface-toggle:hover { border-color: var(--link); }
 /* Reserve space without exposing an unusable button to the accessibility tree. */
 .surface-toggle:disabled { visibility: hidden; }
@@ -80,6 +84,6 @@ h3 { font-size: 1rem; line-height: 1.45; font-weight: 600; margin: 0; overflow-w
   .intro { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding-block: 1.25rem; }
   .academic-portrait { width: min(100%, 13rem); justify-self: center; }
   .intro-copy { padding-top: 0; }
-  .hero-visual { width: min(100%, 13rem); margin: .65rem auto 0; }
+  .hero-visual { width: min(100%, 17rem); margin: .65rem auto 0; }
   .content-section { padding-block: 1.1rem; }
 }

@@ -2,25 +2,15 @@
 const vertexSource = `#version 300 es
 in vec3 aPosition;
 in vec3 aNormal;
-uniform float uAngle;
+uniform mat3 uRotation;
 uniform float uAspect;
 uniform float uRadius;
 out vec3 vNormal;
 out vec3 vView;
 
-// Matrices are written column by column in GLSL.
-mat3 rotateX(float t) {
-    float c = cos(t), s = sin(t);
-    return mat3(1,0,0, 0,c,s, 0,-s,c);
-}
-mat3 rotateZ(float t) {
-    float c = cos(t), s = sin(t);
-    return mat3(c,s,0, -s,c,0, 0,0,1);
-}
 void main() {
-    // Spin about a tilted axis, with a small precession of the surface
-    // normal. The handles remain visible instead of turning edge-on.
-    mat3 rotation = rotateZ(-0.12) * rotateX(0.42) * rotateZ(uAngle) * rotateX(0.25);
+    // One orientation, applied to positions and analytic normals alike.
+    mat3 rotation = uRotation;
     vec3 p = rotation * (aPosition / uRadius);
     // Camera at the origin, looking down -z. The radius normalization
     // and aspect-aware distance keep every rotation within the viewport.
@@ -93,6 +83,68 @@ export function decodeMesh(buffer) {
     return { positions, normals, indices, radius };
 }
 
+// Unit quaternions in [w, x, y, z] order. Multiplication composes rotations
+// right-to-left, just like matrix multiplication.
+export function multiply(a, b) {
+    const [w, x, y, z] = a;
+    const [v, i, j, k] = b;
+    return [w*v-x*i-y*j-z*k, w*i+x*v+y*k-z*j,
+        w*j-x*k+y*v+z*i, w*k+x*j-y*i+z*v];
+}
+
+export function unit(q) {
+    const length = Math.hypot(...q);
+    if (!Number.isFinite(length) || length === 0) throw new Error("Invalid quaternion");
+    return q.map(x => x / length);
+}
+
+export function axisAngle(axis, angle) {
+    const length = Math.hypot(...axis);
+    if (!Number.isFinite(length) || length === 0) throw new Error("Invalid rotation axis");
+    const s = Math.sin(angle / 2) / length;
+    return [Math.cos(angle / 2), ...axis.map(x => s * x)];
+}
+
+/** Column-major rotation matrix for GLSL. */
+export function rotationMatrix(q) {
+    const [w, x, y, z] = unit(q);
+    return new Float32Array([
+        1-2*(y*y+z*z), 2*(x*y+w*z), 2*(x*z-w*y),
+        2*(x*y-w*z), 1-2*(x*x+z*z), 2*(y*z+w*x),
+        2*(x*z+w*y), 2*(y*z-w*x), 1-2*(x*x+y*y)
+    ]);
+}
+
+/** Screen point on a virtual unit sphere, or on its equator outside it. */
+export function trackball(x, y, rect) {
+    const radius = Math.min(rect.width, rect.height) / 2;
+    if (radius <= 0) return [0, 0, 1];
+    const u = (x - rect.left - rect.width / 2) / radius;
+    const v = (rect.top + rect.height / 2 - y) / radius;
+    const r2 = u*u + v*v;
+    if (r2 <= 1) return [u, v, Math.sqrt(1-r2)];
+    return [u/Math.sqrt(r2), v/Math.sqrt(r2), 0];
+}
+
+/** Shortest rotation carrying unit vector a to unit vector b. */
+export function between(a, b) {
+    const dot = Math.max(-1, Math.min(1, a[0]*b[0]+a[1]*b[1]+a[2]*b[2]));
+    const cross = (u,v) => [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];
+    if (dot < -1 + 1e-12) {
+        // The antipodal case has no unique shortest axis; choose a stable one.
+        return axisAngle(cross(a, Math.abs(a[0]) < 0.8 ? [1,0,0] : [0,1,0]), Math.PI);
+    }
+    return unit([1+dot, ...cross(a,b)]);
+}
+
+export const spinAxis = Object.freeze([0.35, 0.56, 0.75]);
+export const initialOrientation = () => unit(multiply(axisAngle([0,0,1], -0.12), axisAngle([1,0,0], 0.67)));
+export function advance(q, radians) {
+    // Right multiplication spins about a body-fixed axis. After a drag d,
+    // the world-space axis is d times its old direction and stays there.
+    return unit(multiply(q, axisAngle(spinAxis, radians)));
+}
+
 function compile(gl, kind, source) {
     const shader = gl.createShader(kind);
     if (!shader) throw new Error("Cannot allocate shader");
@@ -137,7 +189,7 @@ function makeRenderer(gl, mesh) {
     if (!indexBuffer) throw new Error("Cannot allocate index buffer");
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
-    const angle = gl.getUniformLocation(program, "uAngle");
+    const rotation = gl.getUniformLocation(program, "uRotation");
     const aspect = gl.getUniformLocation(program, "uAspect");
     gl.uniform1f(gl.getUniformLocation(program, "uRadius"), mesh.radius);
     gl.enable(gl.DEPTH_TEST);
@@ -145,10 +197,10 @@ function makeRenderer(gl, mesh) {
     gl.cullFace(gl.BACK);
     gl.clearColor(0, 0, 0, 0);
     if (gl.getError() !== gl.NO_ERROR) throw new Error("WebGL buffer initialization failed");
-    return (theta, width, height) => {
+    return (orientation, width, height) => {
         gl.viewport(0, 0, width, height);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.uniform1f(angle, theta);
+        gl.uniformMatrix3fv(rotation, false, rotationMatrix(orientation));
         gl.uniform1f(aspect, width / height);
         gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0);
     };
@@ -166,7 +218,9 @@ export function mountSurface(root) {
     let playing = !motion.matches;
     let visible = false, failed = false, started = false, ready = false;
     let draw = null, frame = null, last = null;
-    let theta = 0.12;
+    let orientation = initialOrientation();
+    let drag = null;
+    let theta = 0; // standalone slider tracks a reset-relative spin phase
     const speed = 2 * Math.PI / 32; // radians per second, 32-second revolution
     const tau = 2 * Math.PI;
 
@@ -181,8 +235,9 @@ export function mountSurface(root) {
         ready = false;
         stop();
         canvas.hidden = true;
-        fallback.hidden = false;
+        fallback.removeAttribute("hidden");
         toggle.disabled = true;
+        drag = null;
         if (slider) slider.disabled = true;
         root.dataset.state = "fallback";
         status.textContent = message;
@@ -195,21 +250,31 @@ export function mountSurface(root) {
         const height = Math.max(1, Math.round(rect.height * scale));
         if (canvas.width !== width) canvas.width = width;
         if (canvas.height !== height) canvas.height = height;
-        draw(theta, width, height);
+        draw(orientation, width, height);
         if (slider) slider.value = String(Math.round(theta * 180 / Math.PI) % 360);
         return true;
     }
-    function active() { return ready && playing && visible && !document.hidden && !failed; }
+    function active() { return ready && playing && drag === null && visible && !document.hidden && !failed; }
     function tick(now) {
         frame = null;
         if (!active()) { stop(); return; }
-        if (last !== null) theta = (theta + speed * Math.min((now - last) / 1000, 0.1)) % tau;
+        if (last !== null) {
+            const delta = speed * Math.min((now - last) / 1000, 0.1);
+            orientation = advance(orientation, delta);
+            theta = (theta + delta) % tau;
+        }
         last = now;
         render();
         frame = requestAnimationFrame(tick);
     }
     function reconcile() {
-        toggle.textContent = playing ? "Pause rotation" : "Start rotation";
+        const label = playing ? "Pause rotation" : "Start rotation";
+        toggle.setAttribute("aria-label", label);
+        toggle.title = label;
+        const icon = toggle.querySelector("[data-rotation-icon]");
+        if (icon) {
+            icon.textContent = playing ? "Ⅱ" : "▶";
+        } else toggle.textContent = label;
         if (active()) {
             if (frame === null) {
                 root.dataset.animating = "true";
@@ -233,7 +298,7 @@ export function mountSurface(root) {
             canvas.hidden = false;
             render();
             if (gl.getError() !== gl.NO_ERROR || gl.isContextLost()) throw new Error("Initial draw failed");
-            fallback.hidden = true;
+            fallback.setAttribute("hidden", "");
             ready = true;
             toggle.disabled = false;
             if (slider) slider.disabled = false;
@@ -249,8 +314,52 @@ export function mountSurface(root) {
     if (slider) slider.addEventListener("input", () => {
         playing = false;
         theta = Number(slider.value) * Math.PI / 180 % tau;
+        orientation = advance(initialOrientation(), theta);
         reconcile();
         render();
+    });
+    function reorient(delta) {
+        orientation = unit(multiply(delta, orientation));
+        render();
+    }
+    function reset() {
+        orientation = initialOrientation();
+        theta = 0;
+        render();
+    }
+    canvas.addEventListener("pointerdown", (event) => {
+        if (!ready || drag !== null || event.button !== 0) return;
+        drag = { id: event.pointerId, point: trackball(event.clientX, event.clientY, canvas.getBoundingClientRect()) };
+        canvas.setPointerCapture(event.pointerId);
+        reconcile();
+    });
+    canvas.addEventListener("pointermove", (event) => {
+        if (drag?.id !== event.pointerId || !ready) return;
+        const next = trackball(event.clientX, event.clientY, canvas.getBoundingClientRect());
+        reorient(between(drag.point, next));
+        drag.point = next;
+    });
+    function endDrag(event) {
+        if (drag?.id !== event.pointerId) return;
+        drag = null;
+        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+        reconcile();
+    }
+    for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) {
+        canvas.addEventListener(name, endDrag);
+    }
+    canvas.addEventListener("dblclick", () => { if (ready) reset(); });
+    canvas.addEventListener("keydown", (event) => {
+        if (!ready || event.altKey || event.ctrlKey || event.metaKey) return;
+        const step = Math.PI / 18;
+        const rotations = {
+            ArrowLeft: [[0,1,0], -step], ArrowRight: [[0,1,0], step],
+            ArrowUp: [[1,0,0], -step], ArrowDown: [[1,0,0], step]
+        };
+        if (event.key === "Home") reset();
+        else if (Object.hasOwn(rotations, event.key)) reorient(axisAngle(...rotations[event.key]));
+        else return;
+        event.preventDefault();
     });
     motion.addEventListener("change", (event) => {
         // Never restart automatically when a motion preference is relaxed.

@@ -76,9 +76,53 @@ combinatorial surfaces.
 `cargo run --release --locked` writes `dist/static/meshes/genus2.json`.
 The schema has `positions` and `normals` (arrays of triples), `triangles`
 (zero-based index triples), and `stats` (vertices, edges, faces, euler, genus).
-The renderer is not part of this step; the current homepage still displays
-its original static schematic and does not fetch the mesh.
+The homepage renderer now uses the binary export described in
+[surface-renderer.md](surface-renderer.md). The original JSON remains an
+inspection format. The 8.5 refinement below changes the geometry, not the
+abstract triangulation.
 
 No new crates are needed. ChatGPT assisted with this implementation and the
 mathematical documentation. The accompanying independent Python reference
 check is not a substitute for compiling and running the Rust tests.
+
+## Refined double-torus shape (Commit 8.5)
+
+Apply the ambient diffeomorphism
+
+    Psi(x,y,z) = (x, s(x)y, t(x)z)
+    e(x) = exp(-(x/0.65)^2)
+    s(x) = 1 - 0.60 e(x)
+    t(x) = 1.12 (1 - 0.40 e(x)).
+
+Both scales are strictly positive (s >= 0.40, t >= 0.672). The inverse divides
+by the same scales at fixed x. This narrows the central bridge and slightly
+thickens the lobes, without changing the topology of the smooth surface.
+The new analytic normals are normalized J(Psi)^(-T) N, namely the vector
+
+    (Nx - s'(x)y Ny/s(x) - t'(x)z Nz/t(x), Ny/s(x), Nz/t(x)).
+
+Here (x,y,z) is the original point. The exported f64 positions and normals
+are those of the deformed surface. The level-set residual test evaluates the
+original equation at the inverse-transformed vertex.
+
+A nonlinear diffeomorphism alone does not establish that the straight triangles
+between deformed vertices remain embedded. To address this, `check_waist`
+verifies positive signed projected areas and the original boundary incidence
+on the new planar coordinates. Temporarily fill each original polygonal hole
+with triangles from its centre to the boundary edges. These fans complete the
+original planar domain to the convex outer polygon, since the holes are convex
+inscribed polygons. Check the orientations of these triangles before and after
+moving the vertices; the hole centres are fixed by the map. The PL map on this
+filled disk keeps x fixed. On each triangle its affine Jacobian has positive
+orientation, so the new y is strictly increasing along each vertical segment.
+The same is true on vertical edges by continuity (the adjacent affine maps
+agree). Each vertical fibre of the original convex polygon is an interval;
+joining the finitely many pieces shows that the map is strictly increasing on
+the entire fibre. Distinct x coordinates remain distinct. Thus the PL map is
+injective, including on the punctured disk. The new upper/lower heights retain
+the original sign and the zero rim, so the two-graph embedding argument applies
+again. The temporary triangles are not exported. All counts remain unchanged.
+
+This is a construction-specific exact-arithmetic argument with floating-point
+checks, not an interval-arithmetic certificate. The independent Python reference
+checks the same projected triangle areas and fan areas at all four resolutions.

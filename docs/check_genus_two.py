@@ -1,10 +1,25 @@
 """Independent stdlib reference check; not a Rust execution or build test."""
 from collections import Counter, defaultdict
-from math import atan2, cos, sin, pi, sqrt, isfinite
+from math import atan2, cos, sin, pi, sqrt, isfinite, exp
 import json
 import gzip
 
 A, B, C, R, L = 2.65, 1.35, 1.12, .53, .43
+
+
+def waist(x):
+    e = exp(-(x/.65)**2)
+    de = -2*x/.65**2 * e
+    return 1-.60*e, -.60*de, 1.12*(1-.40*e), -1.12*.40*de
+
+
+def deform(p, n):
+    x,y,z = p
+    nx,ny,nz = n
+    s,ds,t,dt = waist(x)
+    normal = (nx-ds*y*ny/s-dt*z*nz/t, ny/s, nz/t)
+    length = sqrt(sum(v*v for v in normal))
+    return (x,s*y,t*z), tuple(v/length for v in normal)
 
 
 def generate(arc, seam, radial):
@@ -57,6 +72,21 @@ def generate(arc, seam, radial):
         edges.update(tuple(sorted(e)) for e in [(a,b),(b,c),(c,a)])
     assert min(areas)>0
     assert all((n,boundary[a] and boundary[b]) in [(1,True),(2,False)] for (a,b),n in edges.items())
+    # Extend the planar warp over each hole by a fan, as in the Rust check.
+    warped = [(x, waist(x)[0]*y) for x,y in pts]
+    def area(a,b,c):
+        return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+    new_areas = [area(warped[a],warped[b],warped[c]) for a,b,c in faces]
+    fans = []
+    for a,b,c in faces:
+        for u,v in [(a,b),(b,c),(c,a)]:
+            if edges[tuple(sorted((u,v)))] != 1: continue
+            for cx in [-C,C]:
+                if all(abs((pts[k][0]-cx)**2+pts[k][1]**2-R**2)<1e-10 for k in (u,v)):
+                    assert area(pts[v],pts[u],(cx,0))>0
+                    fans.append(area(warped[v],warped[u],(cx,0)))
+    assert len(fans)==2*n and min(new_areas+fans)>0
+    print(f'waist: min projected area={min(new_areas):.6g}, min fan area={min(fans):.6g}')
     xyz, normals, upper, lower = [], [], [], []
     residual = 0
     for (x,y),rim in zip(pts,boundary):
@@ -69,10 +99,11 @@ def generate(arc, seam, radial):
         residual=max(residual,abs(z*z-L*L*p))
         upper.append(len(xyz))
         for h in [z] if rim else [z,-z]:
-            xyz.append((x,y,h))
             norm=(-L*L*px,-L*L*py,2*h)
             length=sqrt(sum(v*v for v in norm)); assert length>0
-            normals.append(tuple(v/length for v in norm))
+            position, normal = deform((x,y,h), tuple(v/length for v in norm))
+            xyz.append(position)
+            normals.append(normal)
         lower.append(len(xyz)-1)
     triangles=[]
     for a,b,c in faces:

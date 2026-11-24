@@ -13,20 +13,25 @@ needed in the repository; keep the original and lossless master privately.
 
 The portrait is loaded immediately with intrinsic dimensions to reserve space.
 The genus-two surface is progressively enhanced using native WebGL 2. The
-static schematic remains available without JavaScript or WebGL. Rotation can
-be paused and respects reduced-motion preferences, tab visibility and scrolling.
+static schematic remains available without JavaScript or WebGL. The refined
+double torus supports drag-to-reorient with quaternion rotation around a
+body-fixed axis. Use the pause/play icon, arrow keys on the focused canvas,
+or Home/double-click to reset. Rotation respects reduced motion, tab
+visibility and scrolling.
 No graphics library is loaded by the homepage.
 
-## Genus-two mesh (Commit 8.2)
+## Genus-two mesh (Commits 8.2 and 8.5)
 
 The Rust exporter constructs and checks a triangulation of the double of a
 planar pair of pants, including edge orientation and circular vertex links.
-It writes `dist/static/meshes/genus2.json`; the current homepage does not
-request this asset. See [the construction and proof](docs/genus-two.md).
+A smooth waist deformation produces a more classical double-torus silhouette,
+with additional projected-area and hole-fan checks for the PL embedding.
+It writes `dist/static/meshes/genus2.json`; the homepage does not request
+this inspection asset. See [the construction and proof](docs/genus-two.md).
 No new dependencies are required. The optional Python reference check is
 `python docs/check_genus_two.py`; it does not replace the Rust tests.
 
-## Surface renderer (Commits 8.3–8.4)
+## Surface renderer (Commits 8.3–8.5)
 
 The exporter also writes `dist/static/meshes/genus2.bin` and
 `dist/static/surface.js`. The binary is 221,152 bytes at the current resolution,
@@ -43,7 +48,13 @@ python -m http.server 8000 --directory dist
 Open http://localhost:8000/surface-preview.html for the standalone study, or
 http://localhost:8000/ for the integrated homepage. The preview is intentionally
 not copied by the exporter, so a fresh CI build does not publish the preview
-page. The homepage now uses the same renderer (Commit 8.4).
+page. The homepage uses the same renderer, with a larger responsive canvas,
+no visible caption, and a minimal pause/play icon (Commit 8.5).
+Run the optional JavaScript tests with Node 22+:
+
+```powershell
+node --test docs/surface-decoder.test.mjs docs/surface-rotation.test.mjs docs/surface-lifecycle.test.mjs
+```
 
 ## CoxeterViewer5D
 
@@ -68,7 +79,8 @@ python -m http.server 8000 --directory dist
 Open http://localhost:8000/ and check the portrait, advisor link, research,
 CV, software link and mobile layout. The exporter copies the portrait to
 `dist/static/images/portrait.webp`; CI checks that the copy matches the source.
-If the browser is displaying an older stylesheet or photo, refresh the page.
+The surface assets use explicit version queries for Commit 8.5; if the browser
+is displaying an older HTML document, refresh the page.
 
 ## Editing content
 

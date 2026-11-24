@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Academic homepage of {{ profile.full_name }}, a mathematics PhD candidate at {{ profile.institution }}. Research: {{ profile.research_interests }}.">
   <title>{{ profile.display_name }} · Mathematics</title>
-  <link rel="stylesheet" href="./static/style.css">
+  <link rel="stylesheet" href="./static/style.css?v=8.5">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -41,7 +41,7 @@
           <a href="{{ profile.github_url }}">GitHub</a>
         </p>
         <!-- The SVG remains available if JavaScript, WebGL or the mesh is unavailable. -->
-        <figure class="hero-visual" data-genus-surface data-mesh="./static/meshes/genus2.bin">
+        <figure class="hero-visual" data-genus-surface data-mesh="./static/meshes/genus2.bin?v=8.5">
           <div id="surface-mount" class="surface-mount">
             <svg data-fallback role="img" aria-label="Schematic of a surface with two handles" class="surface-fallback" viewBox="0 0 400 270" xmlns="http://www.w3.org/2000/svg" focusable="false">
               <defs>
@@ -63,11 +63,12 @@
                 <path fill="none" stroke="#191970" stroke-width="1.5" d="M34 134 C34 63 100 36 153 53 C176 60 185 77 200 77 C215 77 224 60 247 53 C300 36 366 63 366 134 C366 205 304 230 250 211 C225 203 214 187 200 187 C186 187 175 203 150 211 C96 230 34 205 34 134 Z M87 133 C87 109 105 93 130 95 C155 96 171 113 171 134 C171 156 153 172 130 172 C105 173 87 157 87 133 Z M229 134 C229 113 245 96 270 95 C295 93 313 109 313 133 C313 157 295 173 270 172 C247 172 229 156 229 134 Z"/>
               </g>
             </svg>
-            <canvas hidden role="img" aria-label="Three-dimensional surface with two handles, generated in Rust"></canvas>
+            <canvas hidden tabindex="0" role="img" aria-label="Interactive genus-two surface" aria-describedby="surface-instructions"></canvas>
           </div>
           <figcaption>
-            <span data-status role="status">Genus-two surface (schematic)</span>
-            <button class="surface-toggle" data-toggle type="button" disabled>Start rotation</button>
+            <span class="visually-hidden" data-status role="status">Genus-two surface (schematic)</span>
+            <span class="visually-hidden" id="surface-instructions">Drag or use arrow keys to reorient. Double-click or press Home to reset. Use the rotation button to pause or resume.</span>
+            <button class="surface-toggle" data-toggle type="button" disabled aria-label="Start rotation" title="Start rotation"><span data-rotation-icon aria-hidden="true">▶</span></button>
           </figcaption>
         </figure>
       </div>
@@ -160,6 +161,6 @@
     </footer>
   </main>
   <script src="./static/videos.js" defer></script>
-  <script type="module" src="./static/surface.js"></script>
+  <script type="module" src="./static/surface.js?v=8.5"></script>
 </body>
 </html>

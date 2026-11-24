@@ -1,5 +1,6 @@
 //! A genus-two surface obtained by doubling a polygonal pair of pants.
-//! The vertices sample z² = LAMBDA² q0 q1 q2. See docs/genus-two.md.
+//! Sample z² = LAMBDA² q0 q1 q2, then apply a smooth waist deformation.
+//! See docs/genus-two.md for the embedding argument.
 
 use crate::topology::{self, MeshStats};
 use std::{
@@ -161,6 +162,92 @@ fn planar_mesh(arc: usize, seam: usize, radial: usize) -> Result<PlanarMesh, Str
     Ok((vertices, faces))
 }
 
+/// Positive transverse scales and their x derivatives. The x coordinate is
+/// unchanged, making the analytic map a global ambient diffeomorphism.
+fn waist(x: f64) -> (f64, f64, f64, f64) {
+    let width = 0.65_f64;
+    let e = (-(x / width).powi(2)).exp();
+    let de = -2.0 * x / width.powi(2) * e;
+    (
+        1.0 - 0.60 * e,
+        -0.60 * de,
+        1.12 * (1.0 - 0.40 * e),
+        -1.12 * 0.40 * de,
+    )
+}
+
+fn deform([x, y, z]: Point, [nx, ny, nz]: Point) -> Result<(Point, Point), String> {
+    let (s, ds, t, dt) = waist(x);
+    // A normal is a covector: apply the inverse transpose of the Jacobian.
+    let normal = [nx - ds * y * ny / s - dt * z * nz / t, ny / s, nz / t];
+    let length = normal.iter().map(|v| v * v).sum::<f64>().sqrt();
+    if !length.is_finite() || length <= 0.0 {
+        return Err("invalid deformed normal".into());
+    }
+    Ok(([x, s * y, t * z], normal.map(|v| v / length)))
+}
+
+/// Prove the PL planar warp is injective using vertical fibres. Temporarily
+/// fill both polygonal holes by fans from their centres. The resulting original
+/// domain is a convex polygon. On every nonvertical triangle of that filled
+/// disk, positive projected area means the new y is strictly increasing with
+/// the old y at fixed x. Continuity extends this to edges and vertical fibres
+/// through vertices. The added fan triangles are used only for this check.
+fn check_waist(vertices: &[PlanarVertex], faces: &[Face], angular: usize) -> Result<(), String> {
+    let warped: Vec<_> = vertices
+        .iter()
+        .map(|&v| PlanarVertex {
+            y: waist(v.x).0 * v.y,
+            ..v
+        })
+        .collect();
+    check_planar(&warped, faces)?;
+    let mut incidence = HashMap::new();
+    for &[a, b, c] in faces {
+        for (u, v) in [(a, b), (b, c), (c, a)] {
+            let key = (u.min(v), u.max(v));
+            let entry = incidence.entry(key).or_insert((0, u, v));
+            entry.0 += 1;
+        }
+    }
+    let mut hole_edges = 0;
+    for (count, u, v) in incidence.into_values() {
+        if count != 1 {
+            continue;
+        }
+        let a = vertices[u];
+        let b = vertices[v];
+        for x in [-C, C] {
+            let on_hole = |p: PlanarVertex| ((p.x - x).powi(2) + p.y * p.y - R * R).abs() < 1e-10;
+            if on_hole(a) && on_hole(b) {
+                let center = PlanarVertex {
+                    x,
+                    y: 0.0,
+                    boundary: false,
+                };
+                // Boundary orientation is clockwise on the holes; reverse it
+                // for the added disk. Its centre is fixed by the deformation.
+                let old_area = area2(b, a, center);
+                let new_area = area2(warped[v], warped[u], center);
+                if !old_area.is_finite()
+                    || old_area <= 0.0
+                    || !new_area.is_finite()
+                    || new_area <= 0.0
+                {
+                    return Err("waist deformation inverts a hole-filling triangle".into());
+                }
+                hole_edges += 1;
+            }
+        }
+    }
+    // Each hole has one boundary edge per angular interval, and no other
+    // boundary edge lies on either circle. This also guards the fan selection.
+    if hole_edges != 2 * angular {
+        return Err("missing hole-filling triangles".into());
+    }
+    Ok(())
+}
+
 fn unit_normal(px: f64, py: f64, z: f64) -> Result<Point, String> {
     // The implicit function is F = z² - lambda² P; grad F points outward.
     let n = [-LAMBDA * LAMBDA * px, -LAMBDA * LAMBDA * py, 2.0 * z];
@@ -173,6 +260,7 @@ fn unit_normal(px: f64, py: f64, z: f64) -> Result<Point, String> {
 
 fn build(arc: usize, seam: usize, radial: usize) -> Result<Mesh, String> {
     let (planar, faces) = planar_mesh(arc, seam, radial)?;
+    check_waist(&planar, &faces, arc + seam)?;
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut upper = Vec::new();
@@ -189,14 +277,16 @@ fn build(arc: usize, seam: usize, radial: usize) -> Result<Mesh, String> {
         let z = if v.boundary { 0.0 } else { LAMBDA * p.sqrt() };
         let upper_index = positions.len();
         upper.push(upper_index);
-        positions.push([v.x, v.y, z]);
-        normals.push(unit_normal(px, py, z)?);
+        let (position, normal) = deform([v.x, v.y, z], unit_normal(px, py, z)?)?;
+        positions.push(position);
+        normals.push(normal);
         if v.boundary {
             lower.push(upper_index);
         } else {
             lower.push(positions.len());
-            positions.push([v.x, v.y, -z]);
-            normals.push(unit_normal(px, py, -z)?);
+            let (position, normal) = deform([v.x, v.y, -z], unit_normal(px, py, -z)?)?;
+            positions.push(position);
+            normals.push(normal);
         }
     }
     let mut triangles = Vec::with_capacity(faces.len() * 2);
@@ -274,8 +364,12 @@ mod tests {
         );
         assert_eq!(mesh.positions.len(), mesh.normals.len());
         for (&[x, y, z], n) in mesh.positions.iter().zip(&mesh.normals) {
-            let (p, _, _) = polynomial(x, y);
+            let (s, _, t, _) = waist(x);
+            let (y, z) = (y / s, z / t);
+            let (p, px, py) = polynomial(x, y);
             assert!((z * z - LAMBDA * LAMBDA * p).abs() < 1e-10);
+            let (_, expected) = deform([x, y, z], unit_normal(px, py, z).unwrap()).unwrap();
+            assert!(n.iter().zip(expected).all(|(&a, b)| (a - b).abs() < 1e-12));
             assert!((n.iter().map(|v| v * v).sum::<f64>() - 1.0).abs() < 1e-12);
         }
     }

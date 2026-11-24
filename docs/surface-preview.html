@@ -13,6 +13,8 @@
     .intro { color: #55596a; margin-top: 0; }
     figure { margin: 1.5rem 0; }
     .stage { position: relative; aspect-ratio: 1.6; background: #fff; }
+    .stage canvas { cursor: grab; touch-action: none; }
+    .stage canvas:active { cursor: grabbing; }
     .stage canvas, .stage svg { position: absolute; width: 100%; height: 100%; inset: 0; display: block; }
     figcaption { font-size: .9rem; color: #55596a; text-align: center; }
     .controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .7rem 1rem; padding: 1rem 0; }
@@ -32,15 +34,15 @@
       <svg data-fallback viewBox="0 0 400 250" role="img" aria-label="Schematic of a double torus">
         <path transform="rotate(-8 200 125)" fill="#e5e8f4" stroke="#191970" stroke-width="2" fill-rule="evenodd" d="M30 125 C30 50 110 31 166 70 Q200 94 234 70 C290 31 370 50 370 125 C370 200 290 219 234 180 Q200 156 166 180 C110 219 30 200 30 125 Z M84 125 A40 34 0 1 0 164 125 A40 34 0 1 0 84 125 Z M236 125 A40 34 0 1 0 316 125 A40 34 0 1 0 236 125 Z"/>
       </svg>
-      <canvas hidden role="img" aria-label="Rotating three-dimensional closed orientable surface of genus two"></canvas>
+      <canvas hidden tabindex="0" role="img" aria-label="Rotating three-dimensional closed orientable surface of genus two"></canvas>
     </div>
     <figcaption data-status role="status">Static schematic; interactive rendering requires JavaScript and WebGL 2.</figcaption>
     <div class="controls">
       <button data-toggle type="button" disabled>Start rotation</button>
-      <label class="angle">Viewing angle <input data-angle type="range" min="0" max="359" value="7" disabled></label>
+      <label class="angle">Reset-relative spin angle <input data-angle type="range" min="0" max="359" value="7" disabled></label>
     </div>
   </figure>
-  <p>The two handles arise by doubling a planar pair of pants. The original triangulation and analytic normals are computed in Rust; the browser only renders the exported mesh.</p>
+  <p>Drag to reorient, or use arrow keys; double-click or Home resets. The two handles arise by doubling a planar pair of pants. The original triangulation and analytic normals are computed in Rust; the browser only renders the exported mesh.</p>
 </main>
 <script type="module" src="./static/surface.js"></script>
 </body>
