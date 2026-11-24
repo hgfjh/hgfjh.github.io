@@ -1,7 +1,9 @@
 mod content;
+mod geometry;
+mod topology;
 
 use askama::Template;
-use std::{error::Error, fs, path::Path};
+use std::{error::Error, fs, io, path::Path};
 
 use content::{AcademicProfile, Paper, Talk, academic_profile, papers, talks};
 
@@ -26,7 +28,10 @@ impl HomePage {
 
 /// Render the website into a directory suitable for GitHub Pages.
 fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
+    // Generate and verify the mesh before writing any website files.
+    let mesh = geometry::genus_two().map_err(io::Error::other)?;
     fs::create_dir_all(output.join("static/images"))?;
+    fs::create_dir_all(output.join("static/meshes"))?;
 
     let page = HomePage::new();
 
@@ -43,6 +48,13 @@ fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
     // The PDF in assets/ is a *public* copy: private contact details were
     // actually redacted from the source PDF, not just visually covered.
     fs::copy("assets/cv-public.pdf", output.join("cv.pdf"))?;
+
+    // The next commit will load this asset only when the renderer is needed.
+    // Serialize into a buffer to avoid one filesystem write per coordinate.
+    let mut json = Vec::new();
+    mesh.write_json(&mut json)?;
+    fs::write(output.join("static/meshes/genus2.json"), json)?;
+    println!("Verified genus-two mesh: {:?}", mesh.stats);
 
     Ok(())
 }

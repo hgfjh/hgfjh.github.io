@@ -12,9 +12,18 @@ research entries. The selected IMG_7084 hybrid retouch is copied unchanged into
 needed in the repository; keep the original and lossless master privately.
 
 The portrait is loaded immediately with intrinsic dimensions to reserve space.
-The small genus-two illustration is a static schematic, not a verified mesh.
-`#surface-mount` is reserved for the optional animation in Commit 8. No graphics
-library is loaded by the homepage.
+The small genus-two illustration is still a static schematic. `#surface-mount`
+is reserved for the optional animation in Commit 8.3. No graphics library is
+loaded by the homepage.
+
+## Genus-two mesh (Commit 8.2)
+
+The Rust exporter constructs and checks a triangulation of the double of a
+planar pair of pants, including edge orientation and circular vertex links.
+It writes `dist/static/meshes/genus2.json`; the current homepage does not
+request this asset. See [the construction and proof](docs/genus-two.md).
+No new dependencies are required. The optional Python reference check is
+`python docs/check_genus_two.py`; it does not replace the Rust tests.
 
 ## CoxeterViewer5D
 
