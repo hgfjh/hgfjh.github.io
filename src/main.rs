@@ -75,7 +75,14 @@ mod tests {
         assert!(html.contains("./cv.pdf"));
         assert!(html.contains("./static/images/portrait.webp"));
         assert!(html.contains("alt=\"Portrait of Olu Olorode\""));
-        assert!(html.contains("href=\"#software\""));
+        let viewer_href = "href=\"https://hgfjh.github.io/CoxeterViewer5D/\"";
+        assert!(html.contains(&format!(
+            "<a class=\"nav-demo\" {viewer_href}>Try CoxeterViewer</a>"
+        )));
+        assert_eq!(html.matches(&format!("<a {viewer_href}>")).count(), 1);
+        assert_eq!(html.matches(viewer_href).count(), 2);
+        assert!(html.contains("href=\"https://github.com/hgfjh/CoxeterViewer5D\""));
+        assert!(!html.contains("The browser demo is not yet deployed."));
         assert!(html.contains("id=\"surface-mount\""));
         assert!(html.contains("mailto:oio3@cornell.edu"));
         assert!(html.contains("https://github.com/hgfjh"));
