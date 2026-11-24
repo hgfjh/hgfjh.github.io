@@ -58,3 +58,67 @@ pub fn academic_profile() -> AcademicProfile {
         advisor_url: "https://sites.google.com/cornell.edu/jasonmanning/home",
     }
 }
+
+/// A manuscript and its optional public resources.
+/// `None` means the corresponding resource is not published on the site.
+pub struct Paper {
+    pub title: &'static str,
+    pub authors: &'static str,
+    pub status: &'static str,
+    pub abstract_text: Option<&'static str>,
+    pub pdf_url: Option<&'static str>,
+    pub youtube_id: Option<&'static str>,
+    pub transcript_url: Option<&'static str>,
+}
+
+/// Research entries from the CV. Private manuscripts remain available on request.
+pub fn papers() -> Vec<Paper> {
+    vec![
+        Paper {
+            title: "An Improved Combination Theorem for A/QI Triples",
+            authors: "Oluwadamilola Olorode",
+            status: "Preprint available upon request.",
+            abstract_text: None,
+            pdf_url: None,
+            youtube_id: None,
+            transcript_url: None,
+        },
+        Paper {
+            title: "The Ratcliffe–Tschantz Manifold Is Isometric to Martelli’s Fibered 5-Manifold",
+            authors: "Joint work with I. Broudy, C. Kelln, and L. Xu",
+            status: "Preprint available upon request.",
+            abstract_text: None,
+            pdf_url: None,
+            youtube_id: None,
+            transcript_url: None,
+        },
+    ]
+}
+
+/// One selected research presentation.
+pub struct Talk {
+    pub title: &'static str,
+    pub venue: &'static str,
+    pub year: &'static str,
+}
+
+/// The invited talks listed in the CV, most recent year first.
+pub fn talks() -> Vec<Talk> {
+    vec![
+        Talk {
+            title: "New Tools for Finding Exotic Hyperbolic Groups",
+            venue: "CUNY Geometry and Topology Seminar, Manhattan, NY",
+            year: "2026",
+        },
+        Talk {
+            title: "An Improved Combination Theorem for A/QI Triples",
+            venue: "Spring Topology and Dynamics Conference, Birmingham, AL",
+            year: "2026",
+        },
+        Talk {
+            title: "An Improved Combination Theorem for A/QI Triples",
+            venue: "Brandeis Topology Seminar, Waltham, MA",
+            year: "2025",
+        },
+    ]
+}

@@ -1,57 +1,53 @@
-# Academic Site — Commit 3
+# Academic Site — Commit 4
 
-A small Rust + Askama static-site exporter for an academic homepage. The deployed
-site contains HTML, CSS, and a public CV PDF; GitHub Pages does **not** run Rust.
+Rust + Askama static academic homepage. GitHub Pages serves the exported HTML,
+CSS, JavaScript and public CV; Rust only runs during the build.
 
-## What's new in Commit 3
+## Apply Commit 4
 
-- `src/content.rs` provides the academic profile and education entries.
-- `templates/index.html` renders the biography, education, and contact links.
-- `assets/cv-public.pdf` is a public copy of the four-page CV. The residential
-  address and telephone number have been **redacted from the PDF content**.
-- `src/main.rs` copies the sanitized PDF to `dist/cv.pdf` during static export.
-- The GitHub Actions workflow verifies that the public CV was exported.
-
-The homepage keeps **Olu Olorode** as its display name, as in the existing
-GitHub repository, while the CV retains the full professional name.
-
-## Local build (PowerShell)
+Copy the changed files from the archive into the existing repository. Preserve
+its `.git` history, `Cargo.lock`, `Cargo.toml` and public CV. No dependencies
+changed. The archive preserves the advisor link from the current repository.
 
 ```powershell
-cargo fmt --all -- --check
+cargo fmt --all
 cargo clippy --all-targets --locked -- -D warnings
 cargo test --locked
 cargo run --release --locked
 python -m http.server 8000 --directory dist
 ```
 
-Visit <http://localhost:8000/> and check the **Download CV** link. If `python`
-isn't available, try `py -m http.server 8000 --directory dist`.
+Visit http://localhost:8000/ and check Research, Selected talks, the advisor
+link and CV. The current papers do not have any public abstracts, paper URLs,
+or video IDs supplied to this project, so these optional controls are omitted.
 
-`--locked` uses your existing committed `Cargo.lock`. It is not intentionally
-replaced by this commit, since no dependency versions have changed.
+## Editing research content
 
-## Apply on top of Commit 2
+Edit `papers()` and `talks()` in `src/content.rs`. For each paper, `None`
+means no public resource; change it to `Some("...")` when ready:
 
-Replace the corresponding files in your existing repository with those from
-this archive; add `src/content.rs` and `assets/cv-public.pdf`. Keep your own
-`Cargo.lock` and `.git` history.
+- `abstract_text`: approved plain-text abstract.
+- `pdf_url`: approved public URL (arXiv, DOI landing page, or PDF). Update the
+  `status` field accordingly.
+- `youtube_id`: just the 11-character ID from the YouTube watch URL, not the URL.
+  Make the video public or unlisted and allow embedding.
+- `transcript_url`: a public transcript URL, if available.
+
+The script `static/videos.js` reveals a local play button and creates a
+privacy-enhanced YouTube iframe only after activation. The direct YouTube link
+works with JavaScript disabled. No remote thumbnail, player or YouTube API is
+loaded at page startup. Test an actual video ID when you have one; the Rust
+rendering test uses synthetic metadata that is never exported.
+
+Only put public materials in the repository. Do not commit private manuscripts
+or the original unredacted CV. The exporter copies `assets/cv-public.pdf`.
+
+## Publish
 
 ```powershell
-git status
-git add src/main.rs src/content.rs templates/index.html static/style.css assets/cv-public.pdf .github/workflows/deploy.yml .gitignore README.md
-git commit -m "feat: add academic profile and public CV"
+git add src/content.rs src/main.rs templates/index.html static/style.css static/videos.js .github/workflows/deploy.yml README.md
+git commit -m "feat: add research publications and video-ready entries"
 git push origin main
 ```
 
-The existing `main` deployment workflow will build and publish `dist/` on push.
-
-## Privacy and future editing
-
-**Do not add the original `cv.pdf` to this public repository.** If you later
-update your CV, prepare and inspect a fresh public version before replacing
-`assets/cv-public.pdf`. A white rectangle over sensitive text is not secure
-redaction; the underlying text must be removed.
-
-Publication entries and YouTube video metadata come in Commit 4; the homepage
-uses only the biographical and education information from the supplied CV.
+The existing workflow checks and exports the site, including the video script.

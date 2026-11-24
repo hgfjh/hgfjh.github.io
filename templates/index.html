@@ -13,6 +13,8 @@
     <a class="site-name" href="./">{{ profile.display_name }}</a>
     <nav aria-label="Primary navigation">
       <a href="#about">About</a>
+      <a href="#research">Research</a>
+      <a href="#talks">Talks</a>
       <a href="#education">Education</a>
       <a href="./cv.pdf">CV (PDF)</a>
     </nav>
@@ -41,6 +43,59 @@
       </p>
     </section>
 
+    <section id="research" class="content-section" aria-labelledby="research-heading">
+      <h2 id="research-heading">Research</h2>
+      <ol class="research-list">
+      {% for paper in papers %}
+        <li>
+          <article>
+            <h3>{{ paper.title }}</h3>
+            <p class="details">{{ paper.authors }}</p>
+            <p class="paper-status">{{ paper.status }}</p>
+            {% if let Some(abstract_text) = paper.abstract_text %}
+              <details class="paper-abstract">
+                <summary>Abstract</summary>
+                <p>{{ abstract_text }}</p>
+              </details>
+            {% endif %}
+            <div class="paper-links">
+              {% if let Some(pdf_url) = paper.pdf_url %}
+                <a href="{{ pdf_url }}">Read paper</a>
+              {% else %}
+                <a href="mailto:{{ profile.email }}">Request preprint</a>
+              {% endif %}
+              {% if let Some(transcript_url) = paper.transcript_url %}
+                <a href="{{ transcript_url }}">Video transcript</a>
+              {% endif %}
+            </div>
+            {% if let Some(video_id) = paper.youtube_id %}
+              <div class="paper-video" data-video-id="{{ video_id }}" data-video-title="{{ paper.title }}">
+                <button class="video-load" type="button" hidden>Play research introduction</button>
+                <div class="video-player" hidden></div>
+                <a href="https://www.youtube.com/watch?v={{ video_id }}">Watch on YouTube</a>
+              </div>
+            {% endif %}
+          </article>
+        </li>
+      {% endfor %}
+      </ol>
+    </section>
+
+    <section id="talks" class="content-section" aria-labelledby="talks-heading">
+      <h2 id="talks-heading">Selected talks</h2>
+      <ul class="talk-list">
+      {% for talk in talks %}
+        <li>
+          <div class="education-header">
+            <h3>{{ talk.title }}</h3>
+            <span class="dates">{{ talk.year }}</span>
+          </div>
+          <p class="details">{{ talk.venue }}</p>
+        </li>
+      {% endfor %}
+      </ul>
+    </section>
+
     <section id="education" class="content-section" aria-labelledby="education-heading">
       <h2 id="education-heading">Education</h2>
       <ol class="education-list">
@@ -61,5 +116,6 @@
       <p>Contact: <a href="mailto:{{ profile.email }}">{{ profile.email }}</a></p>
     </footer>
   </main>
+  <script src="./static/videos.js" defer></script>
 </body>
 </html>
