@@ -1,5 +1,6 @@
 mod assets;
 mod content;
+mod discoverability;
 mod geometry;
 mod mesh_binary;
 mod topology;
@@ -16,15 +17,19 @@ use content::{AcademicProfile, Paper, Talk, academic_profile, papers, talks};
 struct HomePage {
     assets: AssetUrls,
     profile: AcademicProfile,
+    profile_json: String,
     papers: Vec<Paper>,
     talks: Vec<Talk>,
 }
 
 impl HomePage {
     fn new(assets: AssetUrls) -> Self {
+        let profile = academic_profile();
+        let profile_json = discoverability::profile_json(&profile, &assets);
         Self {
             assets,
-            profile: academic_profile(),
+            profile,
+            profile_json,
             papers: papers(),
             talks: talks(),
         }
@@ -42,6 +47,7 @@ fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
     mesh_binary::write(&mesh, &mut binary)?;
     let assets = AssetUrls::new(&binary);
     assets.export(output, &binary)?;
+    discoverability::export(output, &assets)?;
     let page = HomePage::new(assets);
     fs::write(output.join("index.html"), page.render()?)?;
 
@@ -80,6 +86,10 @@ mod tests {
             .render()
             .expect("Askama should render a valid homepage");
 
+        assert!(html.contains("<title>Olu Olorode · Mathematics</title>"));
+        assert!(html.contains("<script type=\"application/ld+json\">"));
+        assert!(html.contains(r#""@type": "ProfilePage""#));
+        assert!(html.contains(r#""@type": "Person""#));
         assert!(html.contains("Olu Olorode"));
         assert!(html.contains("Cornell University"));
         assert!(html.contains("Jason Manning"));

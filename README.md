@@ -136,3 +136,42 @@ verify that the homepage, CV, viewer, www redirect and legacy GitHub Pages
 URL work over HTTPS. Test the viewer itself, not merely its landing page.
 If a project has a separate custom domain, GitHub Pages inheritance does not
 apply. No viewer source code or DNS settings are changed by this commit.
+
+## Search discoverability (Commit 11)
+
+The exporter writes `dist/robots.txt` and `dist/sitemap.xml` and embeds an
+inline Schema.org `ProfilePage` / `Person` JSON-LD data block from the public
+profile in `src/content.rs`. Production URLs come from `AssetUrls`. The page
+title, visible content and layout are unchanged. No dependency was added.
+The JSON string encoder escapes characters that could terminate an HTML script
+data block. The existing strict CI audit parses the XML and JSON and checks the
+crawler policy, URLs, title and identity as part of the deployment gate.
+
+The sitemap includes the homepage and the independently deployed CoxeterViewer
+route. The CV is omitted from the sitemap but remains linked and crawlable.
+No private manuscript, unverified identifier, or invented publication metadata
+is included. `robots.txt` permits cooperative crawlers, including AI search
+and training crawlers; this preserves the prior unrestricted policy. Search
+and training preferences may be set independently. Robots rules are not access
+controls. See [OpenAI crawler documentation](https://developers.openai.com/api/docs/bots)
+for the distinction between OAI-SearchBot and GPTBot.
+
+After deployment, check the public files at:
+
+- https://oluolorode.com/robots.txt
+- https://oluolorode.com/sitemap.xml
+
+Verify the domain in [Google Search Console](https://search.google.com/search-console/)
+and [Bing Webmaster Tools](https://www.bing.com/webmasters/), submit the sitemap,
+and request homepage indexing in Google's URL Inspection tool. Validate the
+homepage with [Google's Rich Results Test](https://search.google.com/test/rich-results).
+If Cloudflare proxy or crawler controls are enabled in the future, ensure that
+search crawlers can still reach the public site and that managed robots rules
+agree with your preferences. No markup guarantees indexing, ranking, AI citations
+or a knowledge panel. Add only verified ORCID/Scholar/profile links to the public
+profile as they become available. If the expected title or public identity changes,
+review the independent assertions in `docs/audit_site.py` and Rust tests as well.
+
+Implementation assistance: ChatGPT prepared the discoverability changes and
+regression checks; local Rust compilation and live indexing checks remain the
+site owner's responsibility.

@@ -18,6 +18,9 @@
   <meta property="og:image:height" content="1000">
   <meta property="og:image:alt" content="Portrait of {{ profile.display_name }}">
   <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+{{ profile_json|safe }}
+  </script>
   <link rel="icon" href="{{ assets.icon }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ assets.style }}">
 </head>

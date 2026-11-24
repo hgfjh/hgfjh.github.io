@@ -8,6 +8,7 @@ import argparse
 import gzip
 import json
 import struct
+import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -46,14 +47,67 @@ class Document(HTMLParser):
     def __init__(self, html):
         super().__init__()
         self.tags = []
+        self.titles = []
+        self.json_ld = []
+        self._capture = None
+        self._text = []
         self.feed(html)
 
     def handle_starttag(self, tag, attrs):
-        self.tags.append((tag, dict(attrs)))
+        attributes = dict(attrs)
+        self.tags.append((tag, attributes))
+        if tag == "title" or (tag == "script" and attributes.get("type") == "application/ld+json"):
+            self._capture = tag
+            self._text = []
+
+    def handle_data(self, data):
+        if self._capture is not None:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == self._capture:
+            target = self.titles if tag == "title" else self.json_ld
+            target.append("".join(self._text))
+            self._capture = None
 
     def find(self, tag, **attrs):
         return [a for t, a in self.tags if t == tag and
                 all(a.get(k) == v for k, v in attrs.items())]
+
+
+def audit_discoverability(doc, robots, sitemap, sharing_url):
+    """Independently parse the production crawl files and JSON-LD data block."""
+    require(robots.decode("utf-8") ==
+            f"User-agent: *\nAllow: /\n\nSitemap: {ORIGIN}sitemap.xml\n",
+            "Unexpected crawler policy or sitemap URL")
+    root = ET.fromstring(sitemap)
+    ns = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    require(root.tag == ns + "urlset", "Invalid sitemap root or namespace")
+    require(all(child.tag == ns + "url" and len(child) == 1 and
+                child[0].tag == ns + "loc" for child in root), "Malformed sitemap entry")
+    require([child[0].text for child in root] == [ORIGIN, VIEWER],
+            "Sitemap URLs differ from the public routes")
+    require(doc.titles == ["Olu Olorode · Mathematics"], "Homepage title changed")
+    require(len(doc.find("script", type="application/ld+json")) == 1 and
+            len(doc.json_ld) == 1, "Missing or duplicate JSON-LD data block")
+    require("src" not in doc.find("script", type="application/ld+json")[0],
+            "JSON-LD must be inline data")
+    profile = json.loads(doc.json_ld[0])
+    require(profile["@context"] == "https://schema.org" and
+            profile["@type"] == "ProfilePage" and profile["url"] == ORIGIN and
+            profile["@id"] == ORIGIN + "#profile", "Incorrect ProfilePage identity")
+    person = profile["mainEntity"]
+    require(person["@type"] == "Person" and person["@id"] == ORIGIN + "#person" and
+            person["url"] == ORIGIN and person["image"] == sharing_url,
+            "Incorrect Person identity or sharing image")
+    require(person["name"] == "Oluwadamilola Olorode" and
+            person["alternateName"] == "Olu Olorode", "Incorrect academic name")
+    require(person["jobTitle"] and person["affiliation"]["name"] and
+            person["affiliation"]["@type"] == "CollegeOrUniversity", "Missing affiliation")
+    require(isinstance(person["knowsAbout"], list) and person["knowsAbout"] and
+            all(isinstance(topic, str) and topic for topic in person["knowsAbout"]),
+            "Missing research topics")
+    require("https://github.com/hgfjh" in person["sameAs"], "Missing verified GitHub identity")
 
 
 def audit(root, dist, strict=False):
@@ -62,7 +116,8 @@ def audit(root, dist, strict=False):
         require(bool(result), f"Empty file: {path}")
         return result
 
-    expected = {"index.html", "cv.pdf", "favicon.ico", "static/meshes/genus2.json"}
+    expected = {"index.html", "cv.pdf", "favicon.ico", "static/meshes/genus2.json",
+                "robots.txt", "sitemap.xml"}
     urls, data = {}, {}
     for name, path in ASSETS.items():
         raw = read(path)
@@ -108,6 +163,8 @@ def audit(root, dist, strict=False):
 
     html = read("index.html")
     doc = Document(html.decode("utf-8"))
+    audit_discoverability(doc, read("robots.txt"), read("sitemap.xml"),
+                          ORIGIN + urls["share"][2:])
     require(len(doc.find("html", lang="en")) == 1 and len(doc.find("h1")) == 1,
             "Missing document language or unique h1")
     require(len(doc.find("main", id="main", tabindex="-1")) == 1, "Skip target is not focusable")
@@ -142,7 +199,8 @@ def audit(root, dist, strict=False):
                 require(all(x in ids for x in a[key].split()), f"Broken {key}")
         if tag == "img":
             require(bool(a.get("alt")), "Missing image alternative text")
-        if tag in ("script", "img"):
+        if tag in ("script", "img") and not (tag == "script" and
+                                             a.get("type") == "application/ld+json"):
             require(a.get("src", "").startswith("./"), f"Unexpected eager external {tag}")
         if tag == "link" and a.get("rel") in ("stylesheet", "icon", "preload", "preconnect"):
             require(a.get("href", "").startswith("./"), "External eager link")
