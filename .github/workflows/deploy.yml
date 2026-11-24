@@ -35,6 +35,14 @@ jobs:
       - name: Run Rust tests
         run: cargo test --locked
 
+      - name: Set up Node.js for renderer tests
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Test JavaScript renderer
+        run: node --test docs/surface-decoder.test.mjs docs/surface-rotation.test.mjs docs/surface-lifecycle.test.mjs
+
       - name: Generate static site
         run: cargo run --release --locked
 
@@ -50,12 +58,13 @@ jobs:
           test -s dist/static/meshes/genus2.bin
           test -s dist/static/surface.js
           test "$(wc -c < dist/static/meshes/genus2.bin)" -eq 221152
+          python3 docs/audit_site.py --strict
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload generated site
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -72,4 +81,4 @@ jobs:
     steps:
       - name: Publish to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

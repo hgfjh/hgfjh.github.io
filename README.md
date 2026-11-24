@@ -16,8 +16,9 @@ The genus-two surface is progressively enhanced using native WebGL 2. The
 static schematic remains available without JavaScript or WebGL. The refined
 double torus supports drag-to-reorient with quaternion rotation around a
 body-fixed axis. Use the pause/play icon, arrow keys on the focused canvas,
-or Home/double-click to reset. Rotation respects reduced motion, tab
-visibility and scrolling.
+or Home/double-click to reset. Open the adjacent orientation control to rotate
+in 10-degree steps or reset without dragging. Rotation respects reduced motion,
+tab visibility and scrolling.
 No graphics library is loaded by the homepage.
 
 ## Genus-two mesh (Commits 8.2 and 8.5)
@@ -50,7 +51,7 @@ http://localhost:8000/ for the integrated homepage. The preview is intentionally
 not copied by the exporter, so a fresh CI build does not publish the preview
 page. The homepage uses the same renderer, with a larger responsive canvas,
 no visible caption, and a minimal pause/play icon (Commit 8.5).
-Run the optional JavaScript tests with Node 22+:
+Run the JavaScript tests with Node 22+ (CI uses Node 24):
 
 ```powershell
 node --test docs/surface-decoder.test.mjs docs/surface-rotation.test.mjs docs/surface-lifecycle.test.mjs
@@ -79,8 +80,22 @@ python -m http.server 8000 --directory dist
 Open http://localhost:8000/ and check the portrait, advisor link, research,
 CV, software link and mobile layout. The exporter copies the portrait to
 `dist/static/images/portrait.webp`; CI checks that the copy matches the source.
-The surface assets use explicit version queries for Commit 8.5; if the browser
-is displaying an older HTML document, refresh the page.
+The homepage uses automatically content-fingerprinted URLs for CSS, scripts,
+portrait, mesh, favicon and sharing image. Stable aliases are retained for the
+standalone preview and old pre-9 HTML. CV URLs remain stable. If an old HTML
+page refers to a fingerprint from a prior deployment that no longer exists,
+refresh the page; GitHub Pages controls HTML caching.
+
+## Final audit (Commit 9)
+
+After a release build, run `python docs/audit_site.py`. It verifies the actual
+exported HTML, the asset inventory and fingerprints, unchanged portrait and
+public CV, binary/JSON agreement, and the cold-resource byte budget. CI runs
+`python3 docs/audit_site.py --strict` against its fresh output. The local audit
+reports old build files but does not delete them. See [audit and acceptance
+checks](docs/site-audit.md) for live checks and limitations. The public favicon
+and sharing image are built from a custom SVG and the already approved public
+portrait, respectively. No additional Cargo or npm dependencies are needed.
 
 ## Editing content
 
