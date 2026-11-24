@@ -38,10 +38,14 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw,
 .intro-copy { min-width: 0; padding-top: .25rem; }
 .intro p { margin: 0; }
 .contact-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .65rem; padding-top: .8rem; font-size: .94rem; overflow-wrap: anywhere; }
-.hero-visual { width: min(100%, 10rem); margin: .55rem 0 0 auto; }
-.surface-mount { position: relative; aspect-ratio: 400 / 270; overflow: hidden; }
-.surface-fallback { display: block; width: 100%; height: 100%; }
-.hero-visual figcaption { font-size: .75rem; color: var(--muted); text-align: center; }
+.hero-visual { width: min(100%, 13rem); margin: .25rem auto 0; }
+.surface-mount { position: relative; aspect-ratio: 1 / 1; overflow: hidden; }
+.surface-mount canvas, .surface-fallback { display: block; width: 100%; height: 100%; position: absolute; inset: 0; }
+.hero-visual figcaption { font-size: .8rem; color: var(--muted); text-align: center; }
+.surface-toggle { display: block; margin: .15rem auto 0; padding: .35rem .65rem; min-height: 32px; font: inherit; color: var(--link); background: var(--paper); border: 1px solid var(--line); border-radius: .2rem; cursor: pointer; }
+.surface-toggle:hover { border-color: var(--link); }
+/* Reserve space without exposing an unusable button to the accessibility tree. */
+.surface-toggle:disabled { visibility: hidden; }
 
 /* A single reading column, with conventional headings and citation lists. */
 .content-section { padding-block: 1.25rem 1.45rem; border-top: 1px solid var(--line); scroll-margin-top: 1rem; }
@@ -76,6 +80,6 @@ h3 { font-size: 1rem; line-height: 1.45; font-weight: 600; margin: 0; overflow-w
   .intro { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding-block: 1.25rem; }
   .academic-portrait { width: min(100%, 13rem); justify-self: center; }
   .intro-copy { padding-top: 0; }
-  .hero-visual { width: min(100%, 9rem); margin: .65rem auto 0; }
+  .hero-visual { width: min(100%, 13rem); margin: .65rem auto 0; }
   .content-section { padding-block: 1.1rem; }
 }

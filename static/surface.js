@@ -218,7 +218,7 @@ export function mountSurface(root) {
         } else stop();
     }
     async function start() {
-        if (started || failed) return;
+        if (started || failed || document.hidden) return;
         started = true;
         root.dataset.state = "loading";
         status.textContent = "Loading surface…";
@@ -238,11 +238,11 @@ export function mountSurface(root) {
             toggle.disabled = false;
             if (slider) slider.disabled = false;
             root.dataset.state = "ready";
-            status.textContent = `Genus two · ${(mesh.indices.length / 3).toLocaleString("en-US")} triangles`;
+            status.textContent = "Genus-two surface · generated in Rust";
             reconcile();
         } catch (error) {
             console.warn("Genus-two surface:", error);
-            fail("Interactive surface unavailable; showing the static illustration.");
+            fail("Genus-two surface (static fallback).");
         }
     }
     toggle.addEventListener("click", () => { playing = !playing; reconcile(); });
@@ -257,15 +257,26 @@ export function mountSurface(root) {
         if (event.matches) playing = false;
         reconcile();
     });
-    document.addEventListener("visibilitychange", reconcile);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && visible) {
+            void start();
+            if (ready && !playing) render();
+        }
+        reconcile();
+    });
     canvas.addEventListener("webglcontextlost", () => fail("Graphics context lost; showing the static illustration. Reload to retry."));
-    const resize = () => { if (ready && !active()) render(); };
+    const resize = () => {
+        if (ready && visible && !document.hidden && !active()) render();
+    };
     if (typeof ResizeObserver === "function") new ResizeObserver(resize).observe(root);
     else window.addEventListener("resize", resize);
     if (typeof IntersectionObserver === "function") {
         new IntersectionObserver(([entry]) => {
             visible = entry.isIntersecting;
-            if (visible) void start();
+            if (visible) {
+                void start();
+                if (ready && !playing && !document.hidden) render();
+            }
             reconcile();
         }).observe(root);
     } else { visible = true; void start(); }

@@ -101,6 +101,10 @@ mod tests {
         assert!(html.contains("href=\"https://github.com/hgfjh/CoxeterViewer5D\""));
         assert!(!html.contains("The browser demo is not yet deployed."));
         assert!(html.contains("id=\"surface-mount\""));
+        assert!(html.contains("data-genus-surface"));
+        assert!(html.contains("data-mesh=\"./static/meshes/genus2.bin\""));
+        assert!(html.contains("data-toggle type=\"button\" disabled"));
+        assert!(html.contains("type=\"module\" src=\"./static/surface.js\""));
         assert!(html.contains("mailto:oio3@cornell.edu"));
         assert!(html.contains("https://github.com/hgfjh"));
         assert!(!html.contains("Village Circle"));
