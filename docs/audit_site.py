@@ -12,7 +12,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
 
-ORIGIN = "https://hgfjh.github.io/"
+ORIGIN = "https://oluolorode.com/"
 VIEWER = ORIGIN + "CoxeterViewer5D/"
 ASSETS = {
     "style": "static/style.css",
@@ -115,6 +115,8 @@ def audit(root, dist, strict=False):
             "Missing page title or description")
     require(len(doc.find("link", rel="canonical", href=ORIGIN)) == 1,
             "Missing canonical URL")
+    require(len(doc.find("meta", property="og:url", content=ORIGIN)) == 1,
+            "Open Graph origin is incorrect")
     require(len(doc.find("meta", property="og:image", content=ORIGIN + urls["share"][2:])) == 1,
             "Sharing image URL is incorrect")
     require(len(doc.find("link", rel="stylesheet", href=urls["style"])) == 1,
@@ -128,6 +130,8 @@ def audit(root, dist, strict=False):
     require(len(doc.find("figure", **{"data-mesh": urls["mesh"]})) == 1,
             "Mesh fingerprint absent")
     require(len(doc.find("a", href=VIEWER)) == 2, "Viewer links changed")
+    require("https://hgfjh.github.io/" not in html.decode("utf-8"),
+            "Legacy GitHub Pages origin remains in the homepage")
     require(bool(doc.find("a", href="./cv.pdf")), "CV link missing")
     require(not doc.find("iframe"), "An iframe loads eagerly")
     ids = [a["id"] for _, a in doc.tags if "id" in a]

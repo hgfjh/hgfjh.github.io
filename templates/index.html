@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Academic homepage of {{ profile.full_name }}, a mathematics PhD candidate at {{ profile.institution }}. Research: {{ profile.research_interests }}.">
   <title>{{ profile.display_name }} · Mathematics</title>
-  <link rel="canonical" href="https://hgfjh.github.io/">
+  <link rel="canonical" href="{{ assets.origin }}">
   <meta name="author" content="{{ profile.full_name }}">
   <meta name="theme-color" content="#191970">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://hgfjh.github.io/">
+  <meta property="og:url" content="{{ assets.origin }}">
   <meta property="og:title" content="{{ profile.display_name }} · Mathematics">
   <meta property="og:description" content="{{ profile.role }}, {{ profile.institution }}. {{ profile.research_interests }}.">
   <meta property="og:image" content="{{ assets.share_absolute }}">
@@ -33,7 +33,7 @@
         <a href="#talks">Talks</a>
         <a href="#education">Education</a>
         <a href="./cv.pdf">CV (PDF)</a>
-        <a class="nav-demo" href="https://hgfjh.github.io/CoxeterViewer5D/">Try CoxeterViewer</a>
+        <a class="nav-demo" href="{{ assets.viewer }}">Try CoxeterViewer</a>
       </nav>
     </div>
   </header>
@@ -160,7 +160,7 @@
         <p>An interactive viewer for Coxeter groups, Cayley graphs, Davis complexes, finite covers, and wall systems.</p>
         <p>The browser version requires no installation. Additional research computations are available through the desktop application and external mathematical backends.</p>
         <p class="paper-links">
-          <a href="https://hgfjh.github.io/CoxeterViewer5D/">Try CoxeterViewer</a>
+          <a href="{{ assets.viewer }}">Try CoxeterViewer</a>
           <a href="https://github.com/hgfjh/CoxeterViewer5D">Source code and documentation</a>
         </p>
       </div>

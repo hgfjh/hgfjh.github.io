@@ -87,7 +87,7 @@ mod tests {
         assert!(html.contains("./cv.pdf"));
         assert!(html.contains(&AssetUrls::new(b"test mesh").portrait));
         assert!(html.contains("alt=\"Portrait of Olu Olorode\""));
-        let viewer_href = "href=\"https://hgfjh.github.io/CoxeterViewer5D/\"";
+        let viewer_href = "href=\"https://oluolorode.com/CoxeterViewer5D/\"";
         assert!(html.contains(&format!(
             "<a class=\"nav-demo\" {viewer_href}>Try CoxeterViewer</a>"
         )));
@@ -106,8 +106,13 @@ mod tests {
         assert!(html.contains(&format!("href=\"{}\"", assets.style)));
         assert!(html.contains(&format!("src=\"{}\"", assets.videos)));
         assert!(html.contains(&format!("href=\"{}\"", assets.icon)));
-        assert!(html.contains("rel=\"canonical\" href=\"https://hgfjh.github.io/\""));
-        assert!(html.contains("property=\"og:image\""));
+        assert!(html.contains("rel=\"canonical\" href=\"https://oluolorode.com/\""));
+        assert!(html.contains("property=\"og:url\" content=\"https://oluolorode.com/\""));
+        assert!(html.contains(&format!(
+            "property=\"og:image\" content=\"https://oluolorode.com/{}\"",
+            &assets.share[2..]
+        )));
+        assert!(!html.contains("https://hgfjh.github.io/"));
         assert!(html.contains("data-adjust"));
         assert_eq!(html.matches("data-orient=").count(), 5);
         assert!(!html.contains("?v=8.5"));

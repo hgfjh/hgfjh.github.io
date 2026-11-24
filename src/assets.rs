@@ -1,6 +1,10 @@
 //! Content-addressed public assets. Stable aliases support the standalone preview.
 use std::{fs, io, path::Path};
 
+// Canonical public origin, including its trailing slash. Local asset URLs
+// stay relative so local previews do not depend on production DNS.
+const SITE_ORIGIN: &str = "https://oluolorode.com/";
+
 const STYLE: &[u8] = include_bytes!("../static/style.css");
 const VIDEOS: &[u8] = include_bytes!("../static/videos.js");
 const SURFACE: &[u8] = include_bytes!("../static/surface.js");
@@ -21,6 +25,8 @@ fn url(path: &str, bytes: &[u8]) -> String {
 }
 
 pub struct AssetUrls {
+    pub origin: &'static str,
+    pub viewer: String,
     pub style: String,
     pub videos: String,
     pub surface: String,
@@ -34,8 +40,10 @@ pub struct AssetUrls {
 impl AssetUrls {
     pub fn new(mesh: &[u8]) -> Self {
         let share = url("static/images/share.jpg", SHARE);
-        let share_absolute = format!("https://hgfjh.github.io/{}", &share[2..]);
+        let share_absolute = format!("{SITE_ORIGIN}{}", &share[2..]);
         Self {
+            origin: SITE_ORIGIN,
+            viewer: format!("{SITE_ORIGIN}CoxeterViewer5D/"),
             style: url("static/style.css", STYLE),
             videos: url("static/videos.js", VIDEOS),
             surface: url("static/surface.js", SURFACE),
