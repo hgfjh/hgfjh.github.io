@@ -47,6 +47,9 @@ jobs:
           cmp static/images/portrait.webp dist/static/images/portrait.webp
           test -s dist/cv.pdf
           test -s dist/static/meshes/genus2.json
+          test -s dist/static/meshes/genus2.bin
+          test -s dist/static/surface.js
+          test "$(wc -c < dist/static/meshes/genus2.bin)" -eq 221152
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

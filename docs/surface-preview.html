@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Genus-two surface — renderer preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; font: 16px/1.55 Georgia, serif; color: #242833; background: #fff; }
+    main { max-width: 800px; margin: 2.5rem auto; padding: 0 1.25rem 2rem; }
+    h1 { font-weight: normal; color: #191970; font-size: clamp(1.5rem, 5vw, 2rem); margin-bottom: .4rem; }
+    .intro { color: #55596a; margin-top: 0; }
+    figure { margin: 1.5rem 0; }
+    .stage { position: relative; aspect-ratio: 1.6; background: #fff; }
+    .stage canvas, .stage svg { position: absolute; width: 100%; height: 100%; inset: 0; display: block; }
+    figcaption { font-size: .9rem; color: #55596a; text-align: center; }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .7rem 1rem; padding: 1rem 0; }
+    button { font: inherit; color: #191970; background: #fff; border: 1px solid #a4abc8; padding: .4rem .8rem; border-radius: .2rem; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    input { accent-color: #191970; max-width: 100%; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #191970; outline-offset: 3px; }
+    .angle { display: flex; gap: .5rem; align-items: center; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Genus-two surface</h1>
+  <p class="intro">Standalone rendering study · Native WebGL 2 · Rust-generated geometry</p>
+  <figure data-genus-surface data-mesh="./static/meshes/genus2.bin">
+    <div class="stage">
+      <svg data-fallback viewBox="0 0 400 250" role="img" aria-label="Schematic of a double torus">
+        <path transform="rotate(-8 200 125)" fill="#e5e8f4" stroke="#191970" stroke-width="2" fill-rule="evenodd" d="M30 125 C30 50 110 31 166 70 Q200 94 234 70 C290 31 370 50 370 125 C370 200 290 219 234 180 Q200 156 166 180 C110 219 30 200 30 125 Z M84 125 A40 34 0 1 0 164 125 A40 34 0 1 0 84 125 Z M236 125 A40 34 0 1 0 316 125 A40 34 0 1 0 236 125 Z"/>
+      </svg>
+      <canvas hidden role="img" aria-label="Rotating three-dimensional closed orientable surface of genus two"></canvas>
+    </div>
+    <figcaption data-status role="status">Static schematic; interactive rendering requires JavaScript and WebGL 2.</figcaption>
+    <div class="controls">
+      <button data-toggle type="button" disabled>Start rotation</button>
+      <label class="angle">Viewing angle <input data-angle type="range" min="0" max="359" value="7" disabled></label>
+    </div>
+  </figure>
+  <p>The two handles arise by doubling a planar pair of pants. The original triangulation and analytic normals are computed in Rust; the browser only renders the exported mesh.</p>
+</main>
+<script type="module" src="./static/surface.js"></script>
+</body>
+</html>

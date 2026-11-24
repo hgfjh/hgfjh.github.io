@@ -1,5 +1,6 @@
 mod content;
 mod geometry;
+mod mesh_binary;
 mod topology;
 
 use askama::Template;
@@ -38,6 +39,7 @@ fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
     fs::write(output.join("index.html"), page.render()?)?;
     fs::copy("static/style.css", output.join("static/style.css"))?;
     fs::copy("static/videos.js", output.join("static/videos.js"))?;
+    fs::copy("static/surface.js", output.join("static/surface.js"))?;
 
     // Keep the optimized portrait as a local static asset, just like the CSS.
     fs::copy(
@@ -49,11 +51,14 @@ fn export_site(output: &Path) -> Result<(), Box<dyn Error>> {
     // actually redacted from the source PDF, not just visually covered.
     fs::copy("assets/cv-public.pdf", output.join("cv.pdf"))?;
 
-    // The next commit will load this asset only when the renderer is needed.
+    // Retain the full-precision JSON for inspection.
     // Serialize into a buffer to avoid one filesystem write per coordinate.
     let mut json = Vec::new();
     mesh.write_json(&mut json)?;
     fs::write(output.join("static/meshes/genus2.json"), json)?;
+    let mut binary = Vec::new();
+    mesh_binary::write(&mesh, &mut binary)?;
+    fs::write(output.join("static/meshes/genus2.bin"), binary)?;
     println!("Verified genus-two mesh: {:?}", mesh.stats);
 
     Ok(())

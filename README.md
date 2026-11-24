@@ -13,7 +13,7 @@ needed in the repository; keep the original and lossless master privately.
 
 The portrait is loaded immediately with intrinsic dimensions to reserve space.
 The small genus-two illustration is still a static schematic. `#surface-mount`
-is reserved for the optional animation in Commit 8.3. No graphics library is
+is reserved for homepage integration in Commit 8.4. No graphics library is
 loaded by the homepage.
 
 ## Genus-two mesh (Commit 8.2)
@@ -24,6 +24,24 @@ It writes `dist/static/meshes/genus2.json`; the current homepage does not
 request this asset. See [the construction and proof](docs/genus-two.md).
 No new dependencies are required. The optional Python reference check is
 `python docs/check_genus_two.py`; it does not replace the Rust tests.
+
+## Standalone surface renderer (Commit 8.3)
+
+The exporter also writes `dist/static/meshes/genus2.bin` and
+`dist/static/surface.js`. The binary is 221,152 bytes at the current resolution,
+including its 16-byte header. It retains every triangle and converts positions
+and normals to f32 for rendering only. See [the renderer notes](docs/surface-renderer.md).
+
+To preview locally after running the exporter:
+
+```powershell
+Copy-Item docs/surface-preview.html dist/surface-preview.html
+python -m http.server 8000 --directory dist
+```
+
+Open http://localhost:8000/surface-preview.html. The preview is intentionally
+not copied by the exporter, so a fresh CI build does not publish the preview
+page. The homepage remains unchanged until Commit 8.4.
 
 ## CoxeterViewer5D
 
